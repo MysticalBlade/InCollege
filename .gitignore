@@ -1,0 +1,9 @@
+.vscode/
+bin/
+obj/
+*.o
+*.exe
+__pycache__/
+*.pyc
+.venv/
+node_modules/
