@@ -1,11 +1,25 @@
 2
-Alice
-Passw0rd!
+TestUser
+Password1!
 1
-Alice
-Passw0rd!
+TestUser
+Password1!
 1
+John
+Doe
+Example University
+Computer Science
+2025
+Enthusiastic developer always learning new things.
+YES
+Software Intern
+Tech Corp
+Summer 2024
+Developed tools for internal testing.
+DONE
+YES
+Bachelor of Science
+Example University
+2021-2025
+DONE
 2
-3
-3
-0
