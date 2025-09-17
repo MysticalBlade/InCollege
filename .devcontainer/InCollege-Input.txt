@@ -1,25 +1,42 @@
 2
-TestUser
+EveUser
 Password1!
 1
-TestUser
+EveUser
 Password1!
 1
-Drew
-DeLuna
-USF
-Computer Science
+Eve
+Taylor
+Tech University
+Software Engineering
 2025
-whimsical.
+Dedicated coder with a love for building scalable systems.
 YES
 Software Intern
-Fortnite
-Summer 2024
-Victory Royale.
-DONE
+Innovatech
+Summer 2023
+Worked on backend API integrations.
 YES
-Bachelor of YAY
-WOOOO University
+Research Assistant
+Tech University
+Fall 2022
+Published paper on distributed systems.
+YES
+Teaching Assistant
+Tech University
+2021-2022
+Assisted in teaching Data Structures course.
+YES
+Bachelor of Science
+Tech University
 2021-2025
+YES
+Master of Science
+Tech University
+2025-2027
+YES
+Certificate in Cloud Computing
+Online Institute
+2023
 DONE
 2

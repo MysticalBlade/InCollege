@@ -1,5 +1,5 @@
-Dang, Minh          mndang@usf.edu          Scrum Master
-Dash, Animesh       animeshdash@usf.edu     Developer #1
-De Mello, Luisa     luisamello@usf.edu      Developer #2
-Deluna, Drew        drewd@usf.edu           Tester #1
-Do, Quynh Phuong    phuongdo@usf.edu        Tester #2
+Do, Quynh Phuong    phuongdo@usf.edu        Scrum Master
+Dang, Minh          mndang@usf.edu          Developer #1
+Dash, Animesh       animeshdash@usf.edu     Developer #2
+De Mello, Luisa     luisamello@usf.edu      Tester #1
+Deluna, Drew        drewd@usf.edu           Tester #2
