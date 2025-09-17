@@ -5,21 +5,21 @@ Password1!
 TestUser
 Password1!
 1
-John
-Doe
-Example University
+Drew
+DeLuna
+USF
 Computer Science
 2025
-Enthusiastic developer always learning new things.
+whimsical.
 YES
 Software Intern
-Tech Corp
+Fortnite
 Summer 2024
-Developed tools for internal testing.
+Victory Royale.
 DONE
 YES
-Bachelor of Science
-Example University
+Bachelor of YAY
+WOOOO University
 2021-2025
 DONE
 2
