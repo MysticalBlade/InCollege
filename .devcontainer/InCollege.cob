@@ -402,6 +402,85 @@ PROCEDURE DIVISION.
 *> NEW: Profile creation / editing
 *> =====================
 560-CREATE-OR-EDIT-PROFILE.
+    MOVE "--- Create/Edit Profile ---" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+
+    *> First Name (Required) - validate before creating profile
+    MOVE "Enter First Name:" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    PERFORM 600-GET-USER-INPUT
+    IF NO-MORE-DATA EXIT PARAGRAPH END-IF
+    
+    *> Validate first name is not empty
+    IF FUNCTION TRIM(INPUT-BUFFER) = SPACES
+        MOVE "First name is required and cannot be empty." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        EXIT PARAGRAPH
+    END-IF
+    MOVE FUNCTION TRIM(INPUT-BUFFER) TO TOK-FIRST
+
+    *> Last Name (Required) - validate before creating profile
+    MOVE "Enter Last Name:" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    PERFORM 600-GET-USER-INPUT
+    IF NO-MORE-DATA EXIT PARAGRAPH END-IF
+    
+    *> Validate last name is not empty
+    IF FUNCTION TRIM(INPUT-BUFFER) = SPACES
+        MOVE "Last name is required and cannot be empty." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        EXIT PARAGRAPH
+    END-IF
+    MOVE FUNCTION TRIM(INPUT-BUFFER) TO TOK-LAST
+
+    *> University (Required) - validate before creating profile
+    MOVE "Enter University/College Attended:" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    PERFORM 600-GET-USER-INPUT
+    IF NO-MORE-DATA EXIT PARAGRAPH END-IF
+    
+    *> Validate university is not empty
+    IF FUNCTION TRIM(INPUT-BUFFER) = SPACES
+        MOVE "University/College is required and cannot be empty." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        EXIT PARAGRAPH
+    END-IF
+    MOVE FUNCTION TRIM(INPUT-BUFFER) TO TOK-UNIV
+
+    *> Major (Required) - validate before creating profile
+    MOVE "Enter Major:" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    PERFORM 600-GET-USER-INPUT
+    IF NO-MORE-DATA EXIT PARAGRAPH END-IF
+    
+    *> Validate major is not empty
+    IF FUNCTION TRIM(INPUT-BUFFER) = SPACES
+        MOVE "Major is required and cannot be empty." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        EXIT PARAGRAPH
+    END-IF
+    MOVE FUNCTION TRIM(INPUT-BUFFER) TO TOK-MAJOR
+
+    *> Graduation Year (Required, validated) - validate before creating profile
+    MOVE "Enter Graduation Year (YYYY):" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    PERFORM 600-GET-USER-INPUT
+    IF NO-MORE-DATA EXIT PARAGRAPH END-IF
+    MOVE FUNCTION TRIM(INPUT-BUFFER) TO TOK-GRAD
+
+    IF FUNCTION LENGTH(FUNCTION TRIM(TOK-GRAD)) NOT = 4
+        MOVE "Invalid graduation year length." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        EXIT PARAGRAPH
+    END-IF
+    COMPUTE YEAR-NUM = FUNCTION NUMVAL(TOK-GRAD)
+    IF YEAR-NUM < 2024 OR YEAR-NUM > 2032
+        MOVE "Invalid graduation year range." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        EXIT PARAGRAPH
+    END-IF
+
+    *> All required fields validated - now create/find profile slot
     PERFORM 820-FIND-OR-CREATE-PROFILE-INDEX
     IF PROFILE-IDX = 0
         MOVE "Unable to create profile at this time." TO MESSAGE-BUFFER
@@ -409,55 +488,12 @@ PROCEDURE DIVISION.
         EXIT PARAGRAPH
     END-IF
 
-    MOVE "--- Create/Edit Profile ---" TO MESSAGE-BUFFER
-    PERFORM 700-DISPLAY-MESSAGE
-
-    *> First Name (Required)
-    MOVE "Enter First Name:" TO MESSAGE-BUFFER
-    PERFORM 700-DISPLAY-MESSAGE
-    PERFORM 600-GET-USER-INPUT
-    IF NO-MORE-DATA EXIT PARAGRAPH END-IF
-    MOVE FUNCTION TRIM(INPUT-BUFFER) TO P-FIRST(PROFILE-IDX)
-
-    *> Last Name (Required)
-    MOVE "Enter Last Name:" TO MESSAGE-BUFFER
-    PERFORM 700-DISPLAY-MESSAGE
-    PERFORM 600-GET-USER-INPUT
-    IF NO-MORE-DATA EXIT PARAGRAPH END-IF
-    MOVE FUNCTION TRIM(INPUT-BUFFER) TO P-LAST(PROFILE-IDX)
-
-    *> University (Required)
-    MOVE "Enter University/College Attended:" TO MESSAGE-BUFFER
-    PERFORM 700-DISPLAY-MESSAGE
-    PERFORM 600-GET-USER-INPUT
-    IF NO-MORE-DATA EXIT PARAGRAPH END-IF
-    MOVE FUNCTION TRIM(INPUT-BUFFER) TO P-UNIV(PROFILE-IDX)
-
-    *> Major (Required)
-    MOVE "Enter Major:" TO MESSAGE-BUFFER
-    PERFORM 700-DISPLAY-MESSAGE
-    PERFORM 600-GET-USER-INPUT
-    IF NO-MORE-DATA EXIT PARAGRAPH END-IF
-    MOVE FUNCTION TRIM(INPUT-BUFFER) TO P-MAJOR(PROFILE-IDX)
-
-    *> Graduation Year (Required, validated)
-    MOVE "Enter Graduation Year (YYYY):" TO MESSAGE-BUFFER
-    PERFORM 700-DISPLAY-MESSAGE
-    PERFORM 600-GET-USER-INPUT
-    IF NO-MORE-DATA EXIT PARAGRAPH END-IF
-    MOVE FUNCTION TRIM(INPUT-BUFFER) TO P-GRAD(PROFILE-IDX)
-
-    IF FUNCTION LENGTH(FUNCTION TRIM(P-GRAD(PROFILE-IDX))) NOT = 4
-        MOVE "Invalid graduation year length." TO MESSAGE-BUFFER
-        PERFORM 700-DISPLAY-MESSAGE
-        EXIT PARAGRAPH
-    END-IF
-    COMPUTE YEAR-NUM = FUNCTION NUMVAL(P-GRAD(PROFILE-IDX))
-    IF YEAR-NUM < 1900 OR YEAR-NUM > 2100
-        MOVE "Invalid graduation year range." TO MESSAGE-BUFFER
-        PERFORM 700-DISPLAY-MESSAGE
-        EXIT PARAGRAPH
-    END-IF
+    *> Store validated required fields
+    MOVE TOK-FIRST TO P-FIRST(PROFILE-IDX)
+    MOVE TOK-LAST TO P-LAST(PROFILE-IDX)
+    MOVE TOK-UNIV TO P-UNIV(PROFILE-IDX)
+    MOVE TOK-MAJOR TO P-MAJOR(PROFILE-IDX)
+    MOVE TOK-GRAD TO P-GRAD(PROFILE-IDX)
 
     *> About Me (Optional)
     MOVE "Enter About Me (optional, max 200 chars, enter blank line to skip):" TO MESSAGE-BUFFER
