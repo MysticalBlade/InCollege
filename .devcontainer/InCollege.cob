@@ -40,6 +40,7 @@ FD  USER-PROFILES.
 01  PROFILE-REC                PIC X(500).
 
 WORKING-STORAGE SECTION.
+01  TEMP-FULLNAME PIC X(40).
 01  ACCOUNT-FILE-STATUS        PIC XX.
 01  PROFILE-FILE-STATUS        PIC XX.
 01  END-OF-FILE-FLAG           PIC X      VALUE 'N'.
@@ -304,9 +305,11 @@ PROCEDURE DIVISION.
         PERFORM 700-DISPLAY-MESSAGE
         MOVE "2. View My Profile" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
-        MOVE "3. Search for User" TO MESSAGE-BUFFER
+        MOVE "3. Search for a job" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
-        MOVE "4. Learn a New Skill" TO MESSAGE-BUFFER
+        MOVE "4. Find someone you know" TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        MOVE "5. Learn a New Skill" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
         MOVE "Enter your choice:" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
@@ -319,33 +322,188 @@ PROCEDURE DIVISION.
           TO NORMALIZED-INPUT
 
         EVALUATE TRUE
-           WHEN NORMALIZED-INPUT = "1"
-             OR NORMALIZED-INPUT = "CREATE/EDIT MY PROFILE"
-             OR NORMALIZED-INPUT = "CREATE PROFILE"
-             OR NORMALIZED-INPUT = "EDIT PROFILE"
-               PERFORM 560-CREATE-OR-EDIT-PROFILE
+            WHEN NORMALIZED-INPUT = "1"
+                OR NORMALIZED-INPUT = "CREATE/EDIT MY PROFILE"
+                OR NORMALIZED-INPUT = "CREATE PROFILE"
+                OR NORMALIZED-INPUT = "EDIT PROFILE"
+                PERFORM 560-CREATE-OR-EDIT-PROFILE
 
-           WHEN NORMALIZED-INPUT = "2"
-             OR NORMALIZED-INPUT = "VIEW MY PROFILE"
-             OR NORMALIZED-INPUT = "VIEW PROFILE"
-               PERFORM 565-VIEW-MY-PROFILE
+            WHEN NORMALIZED-INPUT = "2"
+                OR NORMALIZED-INPUT = "VIEW MY PROFILE"
+                OR NORMALIZED-INPUT = "VIEW PROFILE"
+                PERFORM 565-VIEW-MY-PROFILE
 
-           WHEN NORMALIZED-INPUT = "3"
-             OR NORMALIZED-INPUT = "SEARCH FOR USER"
-             OR NORMALIZED-INPUT = "SEARCH USER"
-             OR NORMALIZED-INPUT = "SEARCH"
-               MOVE "Find someone you know is under construction." TO MESSAGE-BUFFER
-               PERFORM 700-DISPLAY-MESSAGE
+            WHEN NORMALIZED-INPUT = "3"
+                OR NORMALIZED-INPUT = "SEARCH FOR A JOB"
+                OR NORMALIZED-INPUT = "SEARCH JOB"
+                OR NORMALIZED-INPUT = "JOB"
+                MOVE "Feature under construction." TO MESSAGE-BUFFER
+                PERFORM 700-DISPLAY-MESSAGE
 
-           WHEN NORMALIZED-INPUT = "4"
-             OR NORMALIZED-INPUT = "LEARN A NEW SKILL"
-             OR NORMALIZED-INPUT = "LEARN"
-               PERFORM 550-SKILLS-MODULE
+            WHEN NORMALIZED-INPUT = "4"
+                OR NORMALIZED-INPUT = "FIND SOMEONE YOU KNOW"
+                OR NORMALIZED-INPUT = "FIND SOMEONE"
+                OR NORMALIZED-INPUT = "SEARCH FOR USER"
+                OR NORMALIZED-INPUT = "SEARCH USER"
+                OR NORMALIZED-INPUT = "SEARCH"
+                PERFORM 570-SEARCH-AND-DISPLAY-PROFILE
 
-           WHEN OTHER
-               CONTINUE
+            WHEN NORMALIZED-INPUT = "5"
+                OR NORMALIZED-INPUT = "LEARN A NEW SKILL"
+                OR NORMALIZED-INPUT = "LEARN"
+                PERFORM 550-SKILLS-MODULE
+
+            WHEN OTHER
+                CONTINUE
         END-EVALUATE
     END-PERFORM.
+*> =====================
+*> NEW: Search and display any user's profile
+*> =====================
+570-SEARCH-AND-DISPLAY-PROFILE.
+        MOVE "Enter the full name of the person you are looking for:" TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        PERFORM 600-GET-USER-INPUT
+        IF NO-MORE-DATA EXIT PARAGRAPH END-IF
+        MOVE FUNCTION TRIM(INPUT-BUFFER) TO INPUT-USERNAME
+
+        MOVE 0 TO PROFILE-IDX
+        PERFORM VARYING LOOP-INDEX FROM 1 BY 1 UNTIL LOOP-INDEX > PROFILE-COUNT
+                 MOVE SPACES TO TEMP-FULLNAME
+                 STRING FUNCTION TRIM(P-FIRST(LOOP-INDEX)) DELIMITED BY SIZE
+               " " DELIMITED BY SIZE
+               FUNCTION TRIM(P-LAST(LOOP-INDEX)) DELIMITED BY SIZE
+          INTO TEMP-FULLNAME
+        END-STRING
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(INPUT-USERNAME)) = FUNCTION UPPER-CASE(FUNCTION TRIM(TEMP-FULLNAME))
+            MOVE LOOP-INDEX TO PROFILE-IDX
+            EXIT PERFORM
+        END-IF
+        END-PERFORM
+
+        IF PROFILE-IDX = 0
+                MOVE "No one by that name could be found." TO MESSAGE-BUFFER
+                PERFORM 700-DISPLAY-MESSAGE
+                EXIT PARAGRAPH
+        END-IF
+
+        MOVE "--- Found User Profile ---" TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+
+        MOVE SPACES TO MESSAGE-BUFFER
+        STRING "Name: " DELIMITED BY SIZE
+                     FUNCTION TRIM(P-FIRST(PROFILE-IDX)) DELIMITED BY SIZE
+                     " " DELIMITED BY SIZE
+                     FUNCTION TRIM(P-LAST(PROFILE-IDX)) DELIMITED BY SIZE
+            INTO MESSAGE-BUFFER
+        END-STRING
+        PERFORM 700-DISPLAY-MESSAGE
+
+        MOVE SPACES TO MESSAGE-BUFFER
+        STRING "University: " DELIMITED BY SIZE
+                     FUNCTION TRIM(P-UNIV(PROFILE-IDX)) DELIMITED BY SIZE
+            INTO MESSAGE-BUFFER
+        END-STRING
+        PERFORM 700-DISPLAY-MESSAGE
+
+        MOVE SPACES TO MESSAGE-BUFFER
+        STRING "Major: " DELIMITED BY SIZE
+                     FUNCTION TRIM(P-MAJOR(PROFILE-IDX)) DELIMITED BY SIZE
+            INTO MESSAGE-BUFFER
+        END-STRING
+        PERFORM 700-DISPLAY-MESSAGE
+
+        MOVE SPACES TO MESSAGE-BUFFER
+        STRING "Graduation Year: " DELIMITED BY SIZE
+                     FUNCTION TRIM(P-GRAD(PROFILE-IDX)) DELIMITED BY SIZE
+            INTO MESSAGE-BUFFER
+        END-STRING
+        PERFORM 700-DISPLAY-MESSAGE
+
+
+                MOVE SPACES TO MESSAGE-BUFFER
+                STRING "About Me: " DELIMITED BY SIZE
+                             FUNCTION TRIM(P-ABOUT(PROFILE-IDX)) DELIMITED BY SIZE
+                    INTO MESSAGE-BUFFER
+                END-STRING
+                PERFORM 700-DISPLAY-MESSAGE
+
+
+                MOVE "Experience:" TO MESSAGE-BUFFER
+                PERFORM 700-DISPLAY-MESSAGE
+                IF P-EXP-COUNT(PROFILE-IDX) > 0
+                PERFORM VARYING SUBI FROM 1 BY 1 UNTIL SUBI > P-EXP-COUNT(PROFILE-IDX)
+                        MOVE SPACES TO MESSAGE-BUFFER
+                        STRING "Title: " DELIMITED BY SIZE
+                                     FUNCTION TRIM(P-EXP-TITLE(PROFILE-IDX SUBI)) DELIMITED BY SIZE
+                            INTO MESSAGE-BUFFER
+                        END-STRING
+                        PERFORM 700-DISPLAY-MESSAGE
+
+                        MOVE SPACES TO MESSAGE-BUFFER
+                        STRING "Company: " DELIMITED BY SIZE
+                                     FUNCTION TRIM(P-EXP-COMP(PROFILE-IDX SUBI)) DELIMITED BY SIZE
+                            INTO MESSAGE-BUFFER
+                        END-STRING
+                        PERFORM 700-DISPLAY-MESSAGE
+
+                        MOVE SPACES TO MESSAGE-BUFFER
+                        STRING "Dates: " DELIMITED BY SIZE
+                                     FUNCTION TRIM(P-EXP-DATES(PROFILE-IDX SUBI)) DELIMITED BY SIZE
+                            INTO MESSAGE-BUFFER
+                        END-STRING
+                        PERFORM 700-DISPLAY-MESSAGE
+
+                        IF FUNCTION TRIM(P-EXP-DESC(PROFILE-IDX SUBI)) NOT = SPACES
+                                MOVE SPACES TO MESSAGE-BUFFER
+                                STRING "Description: " DELIMITED BY SIZE
+                                             FUNCTION TRIM(P-EXP-DESC(PROFILE-IDX SUBI)) DELIMITED BY SIZE
+                                    INTO MESSAGE-BUFFER
+                                END-STRING
+                                PERFORM 700-DISPLAY-MESSAGE
+                        END-IF
+                END-PERFORM
+        ELSE
+                MOVE "Experience: None" TO MESSAGE-BUFFER
+                PERFORM 700-DISPLAY-MESSAGE
+
+        END-IF
+
+
+                MOVE "Education:" TO MESSAGE-BUFFER
+                PERFORM 700-DISPLAY-MESSAGE
+                IF P-EDU-COUNT(PROFILE-IDX) > 0
+                PERFORM VARYING SUBI FROM 1 BY 1 UNTIL SUBI > P-EDU-COUNT(PROFILE-IDX)
+                        MOVE SPACES TO MESSAGE-BUFFER
+                        STRING "Degree: " DELIMITED BY SIZE
+                                     FUNCTION TRIM(P-EDU-DEG(PROFILE-IDX SUBI)) DELIMITED BY SIZE
+                            INTO MESSAGE-BUFFER
+                        END-STRING
+                        PERFORM 700-DISPLAY-MESSAGE
+
+                        MOVE SPACES TO MESSAGE-BUFFER
+                        STRING "University: " DELIMITED BY SIZE
+                                     FUNCTION TRIM(P-EDU-SCHOOL(PROFILE-IDX SUBI)) DELIMITED BY SIZE
+                            INTO MESSAGE-BUFFER
+                        END-STRING
+                        PERFORM 700-DISPLAY-MESSAGE
+
+                        MOVE SPACES TO MESSAGE-BUFFER
+                        STRING "Years: " DELIMITED BY SIZE
+                                     FUNCTION TRIM(P-EDU-YEARS(PROFILE-IDX SUBI)) DELIMITED BY SIZE
+                            INTO MESSAGE-BUFFER
+                        END-STRING
+                        PERFORM 700-DISPLAY-MESSAGE
+                END-PERFORM
+        ELSE
+                MOVE "Education: None" TO MESSAGE-BUFFER
+                PERFORM 700-DISPLAY-MESSAGE
+        END-IF
+
+        MOVE "--------------------" TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE.
+
+
 
 550-SKILLS-MODULE.
     PERFORM UNTIL NO-MORE-DATA
@@ -410,7 +568,7 @@ PROCEDURE DIVISION.
     PERFORM 700-DISPLAY-MESSAGE
     PERFORM 600-GET-USER-INPUT
     IF NO-MORE-DATA EXIT PARAGRAPH END-IF
-    
+
     *> Validate first name is not empty
     IF FUNCTION TRIM(INPUT-BUFFER) = SPACES
         MOVE "First name is required and cannot be empty." TO MESSAGE-BUFFER
@@ -424,7 +582,7 @@ PROCEDURE DIVISION.
     PERFORM 700-DISPLAY-MESSAGE
     PERFORM 600-GET-USER-INPUT
     IF NO-MORE-DATA EXIT PARAGRAPH END-IF
-    
+
     *> Validate last name is not empty
     IF FUNCTION TRIM(INPUT-BUFFER) = SPACES
         MOVE "Last name is required and cannot be empty." TO MESSAGE-BUFFER
@@ -438,7 +596,7 @@ PROCEDURE DIVISION.
     PERFORM 700-DISPLAY-MESSAGE
     PERFORM 600-GET-USER-INPUT
     IF NO-MORE-DATA EXIT PARAGRAPH END-IF
-    
+
     *> Validate university is not empty
     IF FUNCTION TRIM(INPUT-BUFFER) = SPACES
         MOVE "University/College is required and cannot be empty." TO MESSAGE-BUFFER
@@ -452,7 +610,7 @@ PROCEDURE DIVISION.
     PERFORM 700-DISPLAY-MESSAGE
     PERFORM 600-GET-USER-INPUT
     IF NO-MORE-DATA EXIT PARAGRAPH END-IF
-    
+
     *> Validate major is not empty
     IF FUNCTION TRIM(INPUT-BUFFER) = SPACES
         MOVE "Major is required and cannot be empty." TO MESSAGE-BUFFER
@@ -520,7 +678,7 @@ PROCEDURE DIVISION.
         ADD 1 TO P-EXP-COUNT(PROFILE-IDX)
         EVALUATE SUBI
            WHEN 1 MOVE "Experience #1 - Title:" TO MESSAGE-BUFFER
-           WHEN 2 MOVE "Experience #2 - Title:" TO MESSAGE-BUFFER  
+           WHEN 2 MOVE "Experience #2 - Title:" TO MESSAGE-BUFFER
            WHEN 3 MOVE "Experience #3 - Title:" TO MESSAGE-BUFFER
         END-EVALUATE
         PERFORM 700-DISPLAY-MESSAGE
