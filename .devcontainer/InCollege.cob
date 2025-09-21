@@ -666,101 +666,42 @@ PROCEDURE DIVISION.
 
     *> Experience (Optional, up to 3)
     MOVE 0 TO P-EXP-COUNT(PROFILE-IDX)
-    PERFORM VARYING SUBI FROM 1 BY 1 UNTIL SUBI > 3
-        MOVE "Add Experience (optional, max 3 entries. Enter 'DONE' to finish):" TO MESSAGE-BUFFER
-        PERFORM 700-DISPLAY-MESSAGE
-        PERFORM 600-GET-USER-INPUT
-        IF NO-MORE-DATA EXIT PERFORM END-IF
-        MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(INPUT-BUFFER)) TO NORMALIZED-INPUT
-        IF NORMALIZED-INPUT = "DONE"
-            EXIT PERFORM
-        END-IF
-        ADD 1 TO P-EXP-COUNT(PROFILE-IDX)
-        EVALUATE SUBI
-           WHEN 1 MOVE "Experience #1 - Title:" TO MESSAGE-BUFFER
-           WHEN 2 MOVE "Experience #2 - Title:" TO MESSAGE-BUFFER
-           WHEN 3 MOVE "Experience #3 - Title:" TO MESSAGE-BUFFER
-        END-EVALUATE
-        PERFORM 700-DISPLAY-MESSAGE
-        PERFORM 600-GET-USER-INPUT
-        IF NO-MORE-DATA EXIT PERFORM END-IF
-        MOVE FUNCTION TRIM(INPUT-BUFFER) TO P-EXP-TITLE(PROFILE-IDX SUBI)
-
-        EVALUATE SUBI
-           WHEN 1 MOVE "Experience #1 - Company/Organization:" TO MESSAGE-BUFFER
-           WHEN 2 MOVE "Experience #2 - Company/Organization:" TO MESSAGE-BUFFER
-           WHEN 3 MOVE "Experience #3 - Company/Organization:" TO MESSAGE-BUFFER
-        END-EVALUATE
-        PERFORM 700-DISPLAY-MESSAGE
-        PERFORM 600-GET-USER-INPUT
-        IF NO-MORE-DATA EXIT PERFORM END-IF
-        MOVE FUNCTION TRIM(INPUT-BUFFER) TO P-EXP-COMP(PROFILE-IDX SUBI)
-
-        EVALUATE SUBI
-           WHEN 1 MOVE "Experience #1 - Dates (e.g., Summer 2024):" TO MESSAGE-BUFFER
-           WHEN 2 MOVE "Experience #2 - Dates (e.g., Summer 2024):" TO MESSAGE-BUFFER
-           WHEN 3 MOVE "Experience #3 - Dates (e.g., Summer 2024):" TO MESSAGE-BUFFER
-        END-EVALUATE
-        PERFORM 700-DISPLAY-MESSAGE
-        PERFORM 600-GET-USER-INPUT
-        IF NO-MORE-DATA EXIT PERFORM END-IF
-        MOVE FUNCTION TRIM(INPUT-BUFFER) TO P-EXP-DATES(PROFILE-IDX SUBI)
-
-        EVALUATE SUBI
-           WHEN 1 MOVE "Experience #1 - Description (optional, max 100 chars, blank to skip):" TO MESSAGE-BUFFER
-           WHEN 2 MOVE "Experience #2 - Description (optional, max 100 chars, blank to skip):" TO MESSAGE-BUFFER
-           WHEN 3 MOVE "Experience #3 - Description (optional, max 100 chars, blank to skip):" TO MESSAGE-BUFFER
-        END-EVALUATE
-        PERFORM 700-DISPLAY-MESSAGE
-        PERFORM 600-GET-USER-INPUT
-        IF NO-MORE-DATA EXIT PERFORM END-IF
-        IF FUNCTION TRIM(INPUT-BUFFER) NOT = SPACES
-            MOVE FUNCTION TRIM(INPUT-BUFFER) TO P-EXP-DESC(PROFILE-IDX SUBI)
-        END-IF
-    END-PERFORM
+        PERFORM VARYING SUBI FROM 1 BY 1 UNTIL SUBI > 3
+            MOVE "Add Experience (optional, max 3 entries. Enter 'DONE' to finish):" TO MESSAGE-BUFFER
+            PERFORM 700-DISPLAY-MESSAGE
+            PERFORM 600-GET-USER-INPUT
+            IF NO-MORE-DATA EXIT PERFORM END-IF
+            MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(INPUT-BUFFER)) TO NORMALIZED-INPUT
+            IF NORMALIZED-INPUT = "DONE"
+                EXIT PERFORM
+            END-IF
+            ADD 1 TO P-EXP-COUNT(PROFILE-IDX)
+            UNSTRING INPUT-BUFFER DELIMITED BY ALL '~'
+                INTO P-EXP-TITLE(PROFILE-IDX SUBI)
+                     P-EXP-COMP(PROFILE-IDX SUBI)
+                     P-EXP-DATES(PROFILE-IDX SUBI)
+                     P-EXP-DESC(PROFILE-IDX SUBI)
+            END-UNSTRING
+        END-PERFORM
 
     *> Education (Optional, up to 3)
     MOVE 0 TO P-EDU-COUNT(PROFILE-IDX)
-    PERFORM VARYING SUBI FROM 1 BY 1 UNTIL SUBI > 3
-        MOVE "Add Education (optional, max 3 entries. Enter 'DONE' to finish):" TO MESSAGE-BUFFER
-        PERFORM 700-DISPLAY-MESSAGE
-        PERFORM 600-GET-USER-INPUT
-        IF NO-MORE-DATA EXIT PERFORM END-IF
-        MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(INPUT-BUFFER)) TO NORMALIZED-INPUT
-        IF NORMALIZED-INPUT = "DONE"
-            EXIT PERFORM
-        END-IF
-        ADD 1 TO P-EDU-COUNT(PROFILE-IDX)
-        EVALUATE SUBI
-           WHEN 1 MOVE "Education #1 - Degree:" TO MESSAGE-BUFFER
-           WHEN 2 MOVE "Education #2 - Degree:" TO MESSAGE-BUFFER
-           WHEN 3 MOVE "Education #3 - Degree:" TO MESSAGE-BUFFER
-        END-EVALUATE
-        PERFORM 700-DISPLAY-MESSAGE
-        PERFORM 600-GET-USER-INPUT
-        IF NO-MORE-DATA EXIT PERFORM END-IF
-        MOVE FUNCTION TRIM(INPUT-BUFFER) TO P-EDU-DEG(PROFILE-IDX SUBI)
-
-        EVALUATE SUBI
-           WHEN 1 MOVE "Education #1 - University/College:" TO MESSAGE-BUFFER
-           WHEN 2 MOVE "Education #2 - University/College:" TO MESSAGE-BUFFER
-           WHEN 3 MOVE "Education #3 - University/College:" TO MESSAGE-BUFFER
-        END-EVALUATE
-        PERFORM 700-DISPLAY-MESSAGE
-        PERFORM 600-GET-USER-INPUT
-        IF NO-MORE-DATA EXIT PERFORM END-IF
-        MOVE FUNCTION TRIM(INPUT-BUFFER) TO P-EDU-SCHOOL(PROFILE-IDX SUBI)
-
-        EVALUATE SUBI
-           WHEN 1 MOVE "Education #1 - Years Attended (e.g., 2023-2025):" TO MESSAGE-BUFFER
-           WHEN 2 MOVE "Education #2 - Years Attended (e.g., 2023-2025):" TO MESSAGE-BUFFER
-           WHEN 3 MOVE "Education #3 - Years Attended (e.g., 2023-2025):" TO MESSAGE-BUFFER
-        END-EVALUATE
-        PERFORM 700-DISPLAY-MESSAGE
-        PERFORM 600-GET-USER-INPUT
-        IF NO-MORE-DATA EXIT PERFORM END-IF
-        MOVE FUNCTION TRIM(INPUT-BUFFER) TO P-EDU-YEARS(PROFILE-IDX SUBI)
-    END-PERFORM
+        PERFORM VARYING SUBI FROM 1 BY 1 UNTIL SUBI > 3
+            MOVE "Add Education (optional, max 3 entries. Enter 'DONE' to finish):" TO MESSAGE-BUFFER
+            PERFORM 700-DISPLAY-MESSAGE
+            PERFORM 600-GET-USER-INPUT
+            IF NO-MORE-DATA EXIT PERFORM END-IF
+            MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(INPUT-BUFFER)) TO NORMALIZED-INPUT
+            IF NORMALIZED-INPUT = "DONE"
+                EXIT PERFORM
+            END-IF
+            ADD 1 TO P-EDU-COUNT(PROFILE-IDX)
+            UNSTRING INPUT-BUFFER DELIMITED BY ALL '~'
+                INTO P-EDU-DEG(PROFILE-IDX SUBI)
+                     P-EDU-SCHOOL(PROFILE-IDX SUBI)
+                     P-EDU-YEARS(PROFILE-IDX SUBI)
+            END-UNSTRING
+        END-PERFORM
 
     MOVE "Profile saved successfully!" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE
