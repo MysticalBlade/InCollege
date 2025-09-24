@@ -1,31 +1,8 @@
-2
-AliceUser
-Password1!
 1
 AliceUser
 Password1!
-1
-Alice
-Smith
-State University
-Computer Science
-2025
-Passionate about software development.
-Software Engineer Intern~TechCorp~Summer 2024~Worked on backend systems.
-Student Researcher~State University~2023-2024~Published paper on AI.
-DONE
-DONE
+5
 2
-EveUser
-Password1!
-1
-Eve
-Taylor
-Tech University
-Software Engineering
-2025
-Dedicated coder with a love for building scalable systems.
-DONE
-DONE
-4
-Alice Smith
+Eve Taylor
+2
+John Doe
