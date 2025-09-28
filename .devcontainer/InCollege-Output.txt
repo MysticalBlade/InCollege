@@ -5,50 +5,48 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in.
-Welcome, AliceUser!
+Welcome, TestUser!
 Search for a job
 Find someone you know
 Learn a new skill
 Create/Edit My Profile
 View My Profile
+View My Pending Connection Requests
 Enter your choice:
---- Your Profile ---
-Name: Eve Taylor
-University: Tech University
-Major: Software Engineering
-Graduation Year: 2025
-About Me: Dedicated coder with a love for building scalable systems.
+--- Pending Connection Requests ---
+You have no pending connection requests.
 --------------------
 Search for a job
 Find someone you know
 Learn a new skill
 Create/Edit My Profile
 View My Profile
+View My Pending Connection Requests
 Enter your choice:
 Enter the full name of the person you are looking for:
 --- Found User Profile ---
-Name: Eve Taylor
-University: Tech University
-Major: Software Engineering
-Graduation Year: 2025
-About Me: Dedicated coder with a love for building scalable systems.
+Name: New Student
+University: University of South Florida
+Major: Computer Science
+Graduation Year: 2026
+About Me: I am an aspiring Software Engineer
 Experience:
 Experience: None
 Education:
 Education: None
---------------------
+Send connection request to this user? (Y/N)
 Search for a job
 Find someone you know
 Learn a new skill
 Create/Edit My Profile
 View My Profile
+View My Pending Connection Requests
 Enter your choice:
-Enter the full name of the person you are looking for:
-No one by that name could be found.
 Search for a job
 Find someone you know
 Learn a new skill
 Create/Edit My Profile
 View My Profile
+View My Pending Connection Requests
 Enter your choice:
 --- END_OF_PROGRAM_EXECUTION ---

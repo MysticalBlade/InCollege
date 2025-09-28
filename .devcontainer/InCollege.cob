@@ -21,6 +21,11 @@ FILE-CONTROL.
         ORGANIZATION IS LINE SEQUENTIAL
         FILE STATUS IS PROFILE-FILE-STATUS.
 
+    *> NEW: Connections persistence
+    SELECT USER-CONNECTIONS ASSIGN TO 'Connections.dat'
+        ORGANIZATION IS LINE SEQUENTIAL
+        FILE STATUS IS CONNECTION-FILE-STATUS.
+
 DATA DIVISION.
 FILE SECTION.
 FD  USER-INPUT.
@@ -30,16 +35,22 @@ FD  PROGRAM-OUTPUT.
 01  OUTPUT-LINE                PIC X(200).
 
 FD  USER-ACCOUNTS.
-01  ACCOUNT-DATA.
-    05  USER-NAME              PIC X(20).
-    05  FILLER                 PIC X     VALUE '|'.
-    05  USER-PASSWORD          PIC X(12).
+01  ACCOUNT-LINE-OUT     PIC X(33).
 
 *> NEW: Profiles file (one profile per line, '|' between fields, '^' between entries, '~' inside entry)
 FD  USER-PROFILES.
-01  PROFILE-REC                PIC X(500).
+01  PROFILE-REC                PIC X(1500).
+
+*> NEW: Connections file (pending requests)
+FD  USER-CONNECTIONS.
+01  CONNECTION-REC             PIC X(50).
 
 WORKING-STORAGE SECTION.
+01  WS-ACCT-USER                PIC X(20).
+01  WS-ACCT-PASS                PIC X(12).
+01  WS-FILE-STATUS              PIC XX.
+01  GRAD-YEAR-IS-VALID          PIC X VALUE 'N'.
+01  USERNAME-IS-VALID           PIC X VALUE 'N'.
 01  ACCOUNT-FILE-STATUS        PIC XX.
 01  PROFILE-FILE-STATUS        PIC XX.
 01  END-OF-FILE-FLAG           PIC X      VALUE 'N'.
@@ -103,7 +114,7 @@ WORKING-STORAGE SECTION.
            15  P-EDU-YEARS     PIC X(20).
 
 *> Helpers for serialization/deserialization
-01  SER-LINE                   PIC X(500).
+01  SER-LINE                   PIC X(1500).
 01  TOK-USER                   PIC X(20).
 01  TOK-FIRST                  PIC X(20).
 01  TOK-LAST                   PIC X(20).
@@ -129,6 +140,18 @@ WORKING-STORAGE SECTION.
 01  YEAR-NUM                   PIC 9(4) VALUE 0.
 01  PROFILE-IDX                PIC 9 VALUE 0.
 
+*> =====================
+*> NEW: Connections structures (in-memory)
+*> =====================
+01  MAX-CONNECTIONS            PIC 99 VALUE 25.
+01  CONNECTION-TABLE.
+    05  CONNECTION-COUNT       PIC 99 VALUE 0.
+    05  CONNECTION-ENTRY OCCURS 25 TIMES.
+        10  CONN-SENDER        PIC X(20).
+        10  CONN-RECEIVER      PIC X(20).
+
+01  CONNECTION-FILE-STATUS     PIC XX.
+
 PROCEDURE DIVISION.
 000-MAIN.
     PERFORM 100-INITIALIZE-PROGRAM
@@ -137,35 +160,41 @@ PROCEDURE DIVISION.
     STOP RUN.
 
 100-INITIALIZE-PROGRAM.
-    OPEN OUTPUT PROGRAM-OUTPUT
-    OPEN INPUT  USER-INPUT
+    OPEN OUTPUT PROGRAM-OUTPUT.
+    OPEN INPUT  USER-INPUT.
 
-    OPEN INPUT USER-ACCOUNTS
+    OPEN INPUT USER-ACCOUNTS.
     IF ACCOUNT-FILE-STATUS = "00"
         PERFORM FOREVER
             READ USER-ACCOUNTS
                 AT END EXIT PERFORM
             END-READ
-            IF USER-NAME NOT = SPACES
+
+            IF ACCOUNT-LINE-OUT NOT = SPACES
+                MOVE SPACES TO WS-ACCT-USER WS-ACCT-PASS
+                UNSTRING ACCOUNT-LINE-OUT DELIMITED BY "|"
+                    INTO WS-ACCT-USER
+                         WS-ACCT-PASS
+                END-UNSTRING
+
                 ADD 1 TO ACCOUNT-COUNT
-                MOVE USER-NAME TO ACCT-USER(ACCOUNT-COUNT)
-                MOVE USER-PASSWORD TO ACCT-PASS(ACCOUNT-COUNT)
+                MOVE FUNCTION TRIM(WS-ACCT-USER) TO ACCT-USER(ACCOUNT-COUNT)
+                MOVE FUNCTION TRIM(WS-ACCT-PASS) TO ACCT-PASS(ACCOUNT-COUNT)
             END-IF
         END-PERFORM
         CLOSE USER-ACCOUNTS
-    END-IF
+    END-IF.
 
-    *> Initialize skills as "Skill 1" through "Skill 5" to match sample
-    MOVE "Skill 1" TO SKILL-LIST(1)
-    MOVE "Skill 2" TO SKILL-LIST(2)
-    MOVE "Skill 3" TO SKILL-LIST(3)
-    MOVE "Skill 4" TO SKILL-LIST(4)
-    MOVE "Skill 5" TO SKILL-LIST(5)
+    MOVE "Skill 1" TO SKILL-LIST(1).
+    MOVE "Skill 2" TO SKILL-LIST(2).
+    MOVE "Skill 3" TO SKILL-LIST(3).
+    MOVE "Skill 4" TO SKILL-LIST(4).
+    MOVE "Skill 5" TO SKILL-LIST(5).
 
-    *> NEW: Load profiles from file, if present
-    PERFORM 860-LOAD-PROFILES
+    PERFORM 860-LOAD-PROFILES.
+    PERFORM 950-LOAD-CONNECTIONS.
 
-    MOVE "Welcome to InCollege!" TO MESSAGE-BUFFER
+    MOVE "Welcome to InCollege!" TO MESSAGE-BUFFER.
     PERFORM 700-DISPLAY-MESSAGE.
 
 200-MAIN-LOOP.
@@ -201,54 +230,6 @@ PROCEDURE DIVISION.
     END-EVALUATE.
 
 300-LOGIN-PROCESS.
-    PERFORM UNTIL NO-MORE-DATA
-        MOVE "Please enter your username:" TO MESSAGE-BUFFER
-        PERFORM 700-DISPLAY-MESSAGE
-        PERFORM 600-GET-USER-INPUT
-        IF NO-MORE-DATA
-            EXIT PARAGRAPH
-        END-IF
-        MOVE FUNCTION TRIM(INPUT-BUFFER) TO INPUT-USERNAME
-
-        MOVE "Please enter your password:" TO MESSAGE-BUFFER
-        PERFORM 700-DISPLAY-MESSAGE
-        PERFORM 600-GET-USER-INPUT
-        IF NO-MORE-DATA
-            EXIT PARAGRAPH
-        END-IF
-        MOVE FUNCTION TRIM(INPUT-BUFFER) TO INPUT-PASSWORD
-
-        PERFORM 800-VERIFY-CREDENTIALS
-        IF CREDENTIALS-VALID = 'Y'
-            MOVE "You have successfully logged in." TO MESSAGE-BUFFER
-            PERFORM 700-DISPLAY-MESSAGE
-            MOVE SPACES TO MESSAGE-BUFFER
-            STRING "Welcome, "               DELIMITED BY SIZE
-                   FUNCTION TRIM(INPUT-USERNAME) DELIMITED BY SIZE
-                   "!"                       DELIMITED BY SIZE
-              INTO MESSAGE-BUFFER
-            END-STRING
-            PERFORM 700-DISPLAY-MESSAGE
-
-            MOVE FUNCTION TRIM(INPUT-USERNAME) TO CURRENT-USER
-
-            PERFORM 500-POST-LOGIN-OPERATIONS
-            EXIT PARAGRAPH
-        ELSE
-            MOVE "Incorrect username/password, please try again"
-              TO MESSAGE-BUFFER
-            PERFORM 700-DISPLAY-MESSAGE
-        END-IF
-    END-PERFORM.
-
-400-CREATE-ACCOUNT-PROCESS.
-    IF ACCOUNT-COUNT >= MAXIMUM-ACCOUNTS
-        MOVE "All permitted accounts have been created, please come back later"
-          TO MESSAGE-BUFFER
-        PERFORM 700-DISPLAY-MESSAGE
-        EXIT PARAGRAPH
-    END-IF
-
     MOVE "Please enter your username:" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE
     PERFORM 600-GET-USER-INPUT
@@ -257,22 +238,72 @@ PROCEDURE DIVISION.
     END-IF
     MOVE FUNCTION TRIM(INPUT-BUFFER) TO INPUT-USERNAME
 
-    COMPUTE PASS-LENGTH =
-        FUNCTION LENGTH(FUNCTION TRIM(INPUT-USERNAME))
-    IF PASS-LENGTH > 20
-        MOVE "Username too long (max 20)." TO MESSAGE-BUFFER
+    MOVE "Please enter your password:" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    PERFORM 600-GET-USER-INPUT
+    IF NO-MORE-DATA
+        EXIT PARAGraph
+    END-IF
+    MOVE FUNCTION TRIM(INPUT-BUFFER) TO INPUT-PASSWORD
+
+    PERFORM 800-VERIFY-CREDENTIALS
+    IF CREDENTIALS-VALID = 'Y'
+        MOVE "You have successfully logged in." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        MOVE SPACES TO MESSAGE-BUFFER
+        STRING "Welcome, "                      DELIMITED BY SIZE
+               FUNCTION TRIM(INPUT-USERNAME)    DELIMITED BY SIZE
+               "!"                              DELIMITED BY SIZE
+            INTO MESSAGE-BUFFER
+        END-STRING
+        PERFORM 700-DISPLAY-MESSAGE
+        MOVE FUNCTION TRIM(INPUT-USERNAME) TO CURRENT-USER
+        PERFORM 500-POST-LOGIN-OPERATIONS
+    ELSE
+        MOVE "Incorrect username/password, please try again"
+            TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+    END-IF.
+
+
+400-CREATE-ACCOUNT-PROCESS.
+    IF ACCOUNT-COUNT >= MAXIMUM-ACCOUNTS
+        MOVE "All permitted accounts have been created, please come back later"
+            TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
         EXIT PARAGRAPH
     END-IF
 
-    MOVE 'N' TO CREDENTIALS-VALID
-    PERFORM VARYING LOOP-INDEX FROM 1 BY 1
-      UNTIL LOOP-INDEX > ACCOUNT-COUNT
-        IF INPUT-USERNAME = FUNCTION TRIM(ACCT-USER(LOOP-INDEX))
-            MOVE "Username already exists, please try again."
-              TO MESSAGE-BUFFER
-            PERFORM 700-DISPLAY-MESSAGE
+    *> Loop for getting a valid username
+    MOVE 'N' TO USERNAME-IS-VALID
+    PERFORM UNTIL USERNAME-IS-VALID = 'Y'
+        MOVE "Please enter your username:" TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        PERFORM 600-GET-USER-INPUT
+        IF NO-MORE-DATA
             EXIT PARAGRAPH
+        END-IF
+        MOVE FUNCTION TRIM(INPUT-BUFFER) TO INPUT-USERNAME
+
+        *> Check 1: Length
+        COMPUTE PASS-LENGTH =
+            FUNCTION LENGTH(FUNCTION TRIM(INPUT-USERNAME))
+        IF PASS-LENGTH > 20
+            MOVE "Username too long (max 20)." TO MESSAGE-BUFFER
+            PERFORM 700-DISPLAY-MESSAGE
+        ELSE
+            *> Check 2: Uniqueness
+            MOVE 'Y' TO USERNAME-IS-VALID *> Assume it's valid
+            PERFORM VARYING LOOP-INDEX FROM 1 BY 1
+              UNTIL LOOP-INDEX > ACCOUNT-COUNT
+                IF INPUT-USERNAME = FUNCTION TRIM(ACCT-USER(LOOP-INDEX))
+                    MOVE "Username already exists, please try again."
+                      TO MESSAGE-BUFFER
+                    PERFORM 700-DISPLAY-MESSAGE
+                    MOVE 'N' TO USERNAME-IS-VALID *> Mark as invalid
+                    EXIT PERFORM
+                END-IF
+            END-PERFORM
         END-IF
     END-PERFORM
 
@@ -287,7 +318,7 @@ PROCEDURE DIVISION.
     PERFORM 810-VALIDATE-PASSWORD
     IF PASSWORD-VALID-FLAG NOT = 'Y'
         MOVE "Invalid password. Password must be 8-12 characters and include at least one capital letter, one digit, and one special character."
-          TO MESSAGE-BUFFER
+            TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
         EXIT PARAGRAPH
     END-IF
@@ -297,7 +328,6 @@ PROCEDURE DIVISION.
     MOVE INPUT-PASSWORD TO ACCT-PASS(ACCOUNT-COUNT)
     MOVE "Account created successfully." TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE.
-
 *> =====================
 *> UPDATED: Post-login menu to include Profile features
 *> =====================
@@ -313,6 +343,8 @@ PROCEDURE DIVISION.
         PERFORM 700-DISPLAY-MESSAGE
         MOVE "View My Profile" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
+    MOVE "View My Pending Connection Requests" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
         MOVE "Enter your choice:" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
 
@@ -348,11 +380,16 @@ PROCEDURE DIVISION.
              OR NORMALIZED-INPUT = "EDIT PROFILE"
                PERFORM 560-CREATE-OR-EDIT-PROFILE
 
-           WHEN NORMALIZED-INPUT = "5"
-             OR NORMALIZED-INPUT = "VIEW MY PROFILE"
-             OR NORMALIZED-INPUT = "VIEW PROFILE"
-               PERFORM 565-VIEW-MY-PROFILE
+          WHEN NORMALIZED-INPUT = "5"
+                OR NORMALIZED-INPUT = "VIEW MY PROFILE"
+                OR NORMALIZED-INPUT = "VIEW PROFILE"
+                    PERFORM 565-VIEW-MY-PROFILE
 
+            WHEN NORMALIZED-INPUT = "6"
+                OR NORMALIZED-INPUT = "VIEW MY PENDING CONNECTION REQUESTS"
+                OR NORMALIZED-INPUT = "VIEW PENDING CONNECTIONS"
+                OR NORMALIZED-INPUT = "VIEW CONNECTION REQUESTS"
+                    PERFORM 920-VIEW-PENDING-REQUESTS
            WHEN OTHER
                CONTINUE
         END-EVALUATE
@@ -501,7 +538,86 @@ PROCEDURE DIVISION.
     END-IF
 
     MOVE "--------------------" TO MESSAGE-BUFFER
+    MOVE "Send connection request to this user? (Y/N)" TO MESSAGE-BUFFER
+PERFORM 700-DISPLAY-MESSAGE
+PERFORM 600-GET-USER-INPUT
+IF NO-MORE-DATA EXIT PARAGRAPH END-IF
+
+MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(INPUT-BUFFER)) TO NORMALIZED-INPUT
+IF NORMALIZED-INPUT = "Y" OR NORMALIZED-INPUT = "YES"
+    PERFORM 910-SEND-CONNECTION-REQUESTS
+END-IF.
+
+*> =====================
+*> NEW: View pending connection requests
+*> =====================
+920-VIEW-PENDING-REQUESTS.
+    MOVE 0 TO LOOP-INDEX
+    MOVE 0 TO SUBI
+    MOVE "--- Pending Connection Requests ---" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 UNTIL LOOP-INDEX > CONNECTION-COUNT
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX))) = FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+            ADD 1 TO SUBI
+            MOVE SPACES TO MESSAGE-BUFFER
+            STRING "From: " DELIMITED BY SIZE
+                   FUNCTION TRIM(CONN-SENDER(LOOP-INDEX)) DELIMITED BY SIZE
+              INTO MESSAGE-BUFFER
+            END-STRING
+            PERFORM 700-DISPLAY-MESSAGE
+        END-IF
+    END-PERFORM
+    IF SUBI = 0
+        MOVE "You have no pending connection requests." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+    END-IF
+    MOVE "--------------------" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE.
+
+*> =====================
+*> NEW: Send connection request logic
+*> =====================
+*> =====================
+*> NEW: Send connection request logic
+*> =====================
+910-SEND-CONNECTION-REQUESTS.
+    *> Check for self-request
+    IF FUNCTION TRIM(CURRENT-USER) = FUNCTION TRIM(P-USER(PROFILE-IDX))
+        MOVE "You cannot send a connection request to yourself." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        EXIT PARAGRAPH
+    END-IF
+
+    *> Check for existing pending request
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 UNTIL LOOP-INDEX > CONNECTION-COUNT
+        *> Case 1: You already sent a request to them
+        IF FUNCTION TRIM(CONN-SENDER(LOOP-INDEX)) = FUNCTION TRIM(CURRENT-USER) AND
+           FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX)) = FUNCTION TRIM(P-USER(PROFILE-IDX))
+                MOVE "You have already sent a connection request to this user." TO MESSAGE-BUFFER
+                PERFORM 700-DISPLAY-MESSAGE
+                EXIT PARAGRAPH
+        END-IF
+        *> Case 2: They already sent a request to you
+        IF FUNCTION TRIM(CONN-SENDER(LOOP-INDEX)) = FUNCTION TRIM(P-USER(PROFILE-IDX)) AND
+           FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX)) = FUNCTION TRIM(CURRENT-USER)
+                MOVE "This user has already sent you a connection request." TO MESSAGE-BUFFER
+                PERFORM 700-DISPLAY-MESSAGE
+                EXIT PARAGRAPH
+        END-IF
+    END-PERFORM
+
+    *> If we get here, no request exists. Add a new one.
+    IF CONNECTION-COUNT < MAX-CONNECTIONS
+        ADD 1 TO CONNECTION-COUNT
+        MOVE FUNCTION TRIM(CURRENT-USER) TO CONN-SENDER(CONNECTION-COUNT)
+        MOVE FUNCTION TRIM(P-USER(PROFILE-IDX)) TO CONN-RECEIVER(CONNECTION-COUNT)
+        MOVE "Connection request sent!" TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        PERFORM 960-SAVE-CONNECTIONS
+    ELSE
+        MOVE "Cannot send request: connection request limit reached." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+    END-IF.
 
 550-SKILLS-MODULE.
     PERFORM UNTIL NO-MORE-DATA
@@ -597,23 +713,29 @@ PROCEDURE DIVISION.
     MOVE FUNCTION TRIM(INPUT-BUFFER) TO P-MAJOR(PROFILE-IDX)
 
     *> Graduation Year (Required, validated)
-    MOVE "Enter Graduation Year (YYYY):" TO MESSAGE-BUFFER
-    PERFORM 700-DISPLAY-MESSAGE
-    PERFORM 600-GET-USER-INPUT
-    IF NO-MORE-DATA EXIT PARAGRAPH END-IF
-    MOVE FUNCTION TRIM(INPUT-BUFFER) TO P-GRAD(PROFILE-IDX)
+      MOVE 'N' TO GRAD-YEAR-IS-VALID
+    PERFORM UNTIL GRAD-YEAR-IS-VALID = 'Y'
+        MOVE "Enter Graduation Year (YYYY):" TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        PERFORM 600-GET-USER-INPUT
+        IF NO-MORE-DATA
+            EXIT PARAGRAPH
+        END-IF
+        MOVE FUNCTION TRIM(INPUT-BUFFER) TO P-GRAD(PROFILE-IDX)
 
-    IF FUNCTION LENGTH(FUNCTION TRIM(P-GRAD(PROFILE-IDX))) NOT = 4
-        MOVE "Invalid graduation year length." TO MESSAGE-BUFFER
-        PERFORM 700-DISPLAY-MESSAGE
-        EXIT PARAGRAPH
-    END-IF
-    COMPUTE YEAR-NUM = FUNCTION NUMVAL(P-GRAD(PROFILE-IDX))
-    IF YEAR-NUM < 1900 OR YEAR-NUM > 2100
-        MOVE "Invalid graduation year range." TO MESSAGE-BUFFER
-        PERFORM 700-DISPLAY-MESSAGE
-        EXIT PARAGRAPH
-    END-IF
+        IF FUNCTION LENGTH(FUNCTION TRIM(P-GRAD(PROFILE-IDX))) NOT = 4
+            MOVE "Invalid graduation year length." TO MESSAGE-BUFFER
+            PERFORM 700-DISPLAY-MESSAGE
+        ELSE
+            COMPUTE YEAR-NUM = FUNCTION NUMVAL(P-GRAD(PROFILE-IDX))
+            IF YEAR-NUM < 1900 OR YEAR-NUM > 2100
+                MOVE "Invalid graduation year range." TO MESSAGE-BUFFER
+                PERFORM 700-DISPLAY-MESSAGE
+            ELSE
+                MOVE 'Y' TO GRAD-YEAR-IS-VALID
+            END-IF
+        END-IF
+    END-PERFORM.
 
     *> About Me (Optional)
     MOVE "Enter About Me (optional, max 200 chars, enter blank line to skip):" TO MESSAGE-BUFFER
@@ -951,12 +1073,12 @@ PROCEDURE DIVISION.
 *> NEW: Persistence (load/save)
 *> =====================
 860-LOAD-PROFILES.
+    DISPLAY "DEBUG: 860 - About to OPEN USER-PROFILES for INPUT." *> DEBUG
     OPEN INPUT USER-PROFILES
+
     IF PROFILE-FILE-STATUS = "00"
         PERFORM FOREVER
-            READ USER-PROFILES
-                AT END EXIT PERFORM
-            END-READ
+            READ USER-PROFILES AT END EXIT PERFORM END-READ
             IF FUNCTION TRIM(PROFILE-REC) NOT = SPACES
                 IF PROFILE-COUNT < MAX-PROFILES
                     ADD 1 TO PROFILE-COUNT
@@ -964,17 +1086,55 @@ PROCEDURE DIVISION.
                 END-IF
             END-IF
         END-PERFORM
-        CLOSE USER-PROFILES
-    END-IF.
+    ELSE
+        IF PROFILE-FILE-STATUS NOT = "35"
+            DISPLAY "Error opening Profiles.dat for input: "
+                    PROFILE-FILE-STATUS
+        END-IF
+    END-IF
 
-870-SAVE-PROFILES.
-    OPEN OUTPUT USER-PROFILES
-    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 UNTIL LOOP-INDEX > PROFILE-COUNT
-        PERFORM 835-SERIALIZE-PROFILE
-        WRITE PROFILE-REC FROM SER-LINE
-    END-PERFORM
+    DISPLAY "DEBUG: 860 - About to CLOSE USER-PROFILES." *> DEBUG
     CLOSE USER-PROFILES.
 
+870-SAVE-PROFILES.
+    DISPLAY "DEBUG: 870 - About to OPEN USER-PROFILES for OUTPUT." *> DEBUG
+    OPEN OUTPUT USER-PROFILES
+
+    IF PROFILE-FILE-STATUS NOT = "00"
+        DISPLAY "Error opening Profiles.dat for output: "
+                PROFILE-FILE-STATUS
+        GOBACK
+    END-IF
+
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1
+        UNTIL PROFILE-COUNT = 0 OR LOOP-INDEX > PROFILE-COUNT
+            PERFORM 835-SERIALIZE-PROFILE
+            WRITE PROFILE-REC FROM SER-LINE
+    END-PERFORM
+
+    CLOSE USER-PROFILES.
+900-TERMINATE-PROGRAM.
+    OPEN OUTPUT USER-ACCOUNTS.
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1
+      UNTIL LOOP-INDEX > ACCOUNT-COUNT
+        MOVE SPACES TO ACCOUNT-LINE-OUT
+        STRING FUNCTION TRIM(ACCT-USER(LOOP-INDEX)) DELIMITED BY SIZE
+               "|" DELIMITED BY SIZE
+               FUNCTION TRIM(ACCT-PASS(LOOP-INDEX)) DELIMITED BY SIZE
+            INTO ACCOUNT-LINE-OUT
+        END-STRING
+        WRITE ACCOUNT-LINE-OUT
+    END-PERFORM.
+    CLOSE USER-ACCOUNTS.
+
+    PERFORM 870-SAVE-PROFILES.
+    PERFORM 960-SAVE-CONNECTIONS.
+
+    MOVE "--- END_OF_PROGRAM_EXECUTION ---" TO MESSAGE-BUFFER.
+    PERFORM 700-DISPLAY-MESSAGE.
+
+    CLOSE PROGRAM-OUTPUT.
+    CLOSE USER-INPUT.
 830-DESERIALIZE-PROFILE.
     *> PROFILE-REC: user|first|last|univ|major|grad|about|expCount|eduCount|expBlock|eduBlock
     MOVE SPACES TO TOK-USER TOK-FIRST TOK-LAST TOK-UNIV TOK-MAJOR TOK-GRAD TOK-ABOUT
@@ -1115,21 +1275,38 @@ PROCEDURE DIVISION.
       INTO SER-LINE
     END-STRING.
 
-900-TERMINATE-PROGRAM.
-    OPEN OUTPUT USER-ACCOUNTS
-    PERFORM VARYING LOOP-INDEX FROM 1 BY 1
-      UNTIL LOOP-INDEX > ACCOUNT-COUNT
-        MOVE ACCT-USER(LOOP-INDEX) TO USER-NAME
-        MOVE ACCT-PASS(LOOP-INDEX) TO USER-PASSWORD
-        WRITE ACCOUNT-DATA
+
+*> =====================
+*> NEW: Connections persistence
+*> =====================
+950-LOAD-CONNECTIONS.
+    OPEN INPUT USER-CONNECTIONS
+    IF CONNECTION-FILE-STATUS = "00"
+        PERFORM FOREVER
+            READ USER-CONNECTIONS
+                AT END EXIT PERFORM
+            END-READ
+            IF FUNCTION TRIM(CONNECTION-REC) NOT = SPACES
+                IF CONNECTION-COUNT < MAX-CONNECTIONS
+                    ADD 1 TO CONNECTION-COUNT
+                    UNSTRING CONNECTION-REC DELIMITED BY '|'
+                        INTO CONN-SENDER(CONNECTION-COUNT)
+                             CONN-RECEIVER(CONNECTION-COUNT)
+                    END-UNSTRING
+                END-IF
+            END-IF
+        END-PERFORM
+        CLOSE USER-CONNECTIONS
+    END-IF.
+
+960-SAVE-CONNECTIONS.
+    OPEN OUTPUT USER-CONNECTIONS
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 UNTIL LOOP-INDEX > CONNECTION-COUNT
+        STRING FUNCTION TRIM(CONN-SENDER(LOOP-INDEX)) DELIMITED BY SIZE
+               "|" DELIMITED BY SIZE
+               FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX)) DELIMITED BY SIZE
+          INTO CONNECTION-REC
+        END-STRING
+        WRITE CONNECTION-REC
     END-PERFORM
-    CLOSE USER-ACCOUNTS
-
-    *> Save profiles on exit as well
-    PERFORM 870-SAVE-PROFILES
-
-    MOVE "--- END_OF_PROGRAM_EXECUTION ---" TO MESSAGE-BUFFER
-    PERFORM 700-DISPLAY-MESSAGE
-
-    CLOSE PROGRAM-OUTPUT
-    CLOSE USER-INPUT.
+    CLOSE USER-CONNECTIONS.
