@@ -1,32 +1,23 @@
 2
-Bob
-Secure1$
-2
-Bob
-Secure1$
-2
+charlie
+C0b0l$R0cks
+1
+charlie
+C0b0l$R0cks
+4
 Charlie
-short1$
+Bucket
+Chocolate University
+Software Engineering
+2026
+Loves systems programming.
+done
+done
 2
-David
-password1$
-2
-Eve
-Password$
-2
-Frank
-Password1
-2
-Grace
-Aa1$5678
-2
-Hannah
-Ab1$34567890
-1
-Bob
-Secure1$
-3
-1
-Go Back
+Bob Builder
+Y
 
-
+1
+bob
+S3cur3P@ss!
+6
