@@ -5,32 +5,28 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in.
-Welcome, AliceGomes!
+Welcome, TestUser!
 Search for a job
 Find someone you know
 Learn a new skill
 Create/Edit My Profile
 View My Profile
 View My Pending Connection Requests
+View My Network
 Enter your choice:
-Enter the full name of the person you are looking for:
---- Found User Profile ---
-Name: Test User
-University: USF
-Major: Computer Science
-Graduation Year: 2025
-About Me: I am a test user.
-Experience:
-Experience: None
-Education:
-Education: None
-Send connection request to this user? (Y/N)
-Connection request sent!
+--- Pending Connection Requests ---
+Request from: AliceGomes
+1. Accept
+2. Reject
+Enter your choice for AliceGomes:
+Connection request from AliceGomes accepted!
+--------------------
 Search for a job
 Find someone you know
 Learn a new skill
 Create/Edit My Profile
 View My Profile
 View My Pending Connection Requests
+View My Network
 Enter your choice:
 --- END_OF_PROGRAM_EXECUTION ---

@@ -16,15 +16,16 @@ FILE-CONTROL.
     SELECT USER-ACCOUNTS ASSIGN TO 'Accounts.dat'
         ORGANIZATION IS LINE SEQUENTIAL
         FILE STATUS IS ACCOUNT-FILE-STATUS.
-    *> NEW: Profiles persistence
     SELECT USER-PROFILES ASSIGN TO 'Profiles.dat'
         ORGANIZATION IS LINE SEQUENTIAL
         FILE STATUS IS PROFILE-FILE-STATUS.
-
-    *> NEW: Connections persistence
     SELECT USER-CONNECTIONS ASSIGN TO 'Connections.dat'
         ORGANIZATION IS LINE SEQUENTIAL
         FILE STATUS IS CONNECTION-FILE-STATUS.
+    *> NEW: Permanent connections file
+    SELECT PERMANENT-CONNECTIONS ASSIGN TO 'PermanentConnections.dat'
+        ORGANIZATION IS LINE SEQUENTIAL
+        FILE STATUS IS PERM-CONN-FILE-STATUS.
 
 DATA DIVISION.
 FILE SECTION.
@@ -45,7 +46,21 @@ FD  USER-PROFILES.
 FD  USER-CONNECTIONS.
 01  CONNECTION-REC             PIC X(200).
 
+FD  PERMANENT-CONNECTIONS.
+01  PERM-CONNECTION-REC         PIC X(200).
+
 WORKING-STORAGE SECTION.
+
+*> =====================
+*> NEW: Permanent Connections structures (for accept/reject)
+*> =====================
+01  MAX-PERMANENT-CONNECTIONS   PIC 99 VALUE 25.
+01  PERMANENT-CONNECTION-TABLE.
+       05  PERMANENT-COUNT         PIC 99 VALUE 0.
+       05  PERMANENT-ENTRY OCCURS 25 TIMES.
+           10  PERM-USER1          PIC X(20).
+           10  PERM-USER2          PIC X(20).
+01  PERM-CONN-FILE-STATUS       PIC XX.
 01  WS-ACCT-USER                PIC X(20).
 01  WS-ACCT-PASS                PIC X(12).
 01  WS-FILE-STATUS              PIC XX.
@@ -193,6 +208,7 @@ PROCEDURE DIVISION.
 
     PERFORM 860-LOAD-PROFILES.
     PERFORM 950-LOAD-CONNECTIONS.
+    PERFORM 975-LOAD-PERMANENT-CONNECTIONS.
 
     MOVE "Welcome to InCollege!" TO MESSAGE-BUFFER.
     PERFORM 700-DISPLAY-MESSAGE.
@@ -331,6 +347,9 @@ PROCEDURE DIVISION.
 *> =====================
 *> UPDATED: Post-login menu to include Profile features
 *> =====================
+*> =====================
+*> UPDATED: Post-login menu to include Network view
+*> =====================
 500-POST-LOGIN-OPERATIONS.
     PERFORM UNTIL NO-MORE-DATA
         MOVE "Search for a job" TO MESSAGE-BUFFER
@@ -343,8 +362,11 @@ PROCEDURE DIVISION.
         PERFORM 700-DISPLAY-MESSAGE
         MOVE "View My Profile" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
-    MOVE "View My Pending Connection Requests" TO MESSAGE-BUFFER
-    PERFORM 700-DISPLAY-MESSAGE
+        MOVE "View My Pending Connection Requests" TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        *> NEW: View Network option
+        MOVE "View My Network" TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
         MOVE "Enter your choice:" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
 
@@ -360,7 +382,8 @@ PROCEDURE DIVISION.
              OR NORMALIZED-INPUT = "SEARCH FOR A JOB"
              OR NORMALIZED-INPUT = "SEARCH JOB"
              OR NORMALIZED-INPUT = "SEARCH"
-               MOVE "Job search/internship is under construction." TO MESSAGE-BUFFER
+               MOVE "Job search/internship is under construction." 
+                 TO MESSAGE-BUFFER
                PERFORM 700-DISPLAY-MESSAGE
 
            WHEN NORMALIZED-INPUT = "2"
@@ -380,16 +403,18 @@ PROCEDURE DIVISION.
              OR NORMALIZED-INPUT = "EDIT PROFILE"
                PERFORM 560-CREATE-OR-EDIT-PROFILE
 
-          WHEN NORMALIZED-INPUT = "5"
-                OR NORMALIZED-INPUT = "VIEW MY PROFILE"
-                OR NORMALIZED-INPUT = "VIEW PROFILE"
-                    PERFORM 565-VIEW-MY-PROFILE
+           WHEN NORMALIZED-INPUT = "5"
+             OR NORMALIZED-INPUT = "VIEW MY PROFILE"
+             OR NORMALIZED-INPUT = "VIEW PROFILE"
+               PERFORM 565-VIEW-MY-PROFILE
 
-            WHEN NORMALIZED-INPUT = "6"
-                OR NORMALIZED-INPUT = "VIEW MY PENDING CONNECTION REQUESTS"
-                OR NORMALIZED-INPUT = "VIEW PENDING CONNECTIONS"
-                OR NORMALIZED-INPUT = "VIEW CONNECTION REQUESTS"
-                    PERFORM 920-VIEW-PENDING-REQUESTS
+           WHEN NORMALIZED-INPUT = "6"
+             OR NORMALIZED-INPUT = "VIEW MY PENDING CONNECTION REQUESTS"
+             OR NORMALIZED-INPUT = "VIEW PENDING CONNECTIONS"
+             OR NORMALIZED-INPUT = "VIEW CONNECTION REQUESTS"
+               PERFORM 920-VIEW-PENDING-REQUESTS
+
+
            WHEN OTHER
                CONTINUE
         END-EVALUATE
@@ -551,34 +576,166 @@ END-IF.
 *> =====================
 *> NEW: View pending connection requests
 *> =====================
+*> =====================
+*> UPDATED: View pending connection requests with accept/reject
+*> =====================
+*> =====================
+*> UPDATED: View pending connection requests with accept/reject
+*> =====================
+*> =====================
+*> UPDATED: View pending connection requests with accept/reject
+*> =====================
 920-VIEW-PENDING-REQUESTS.
     MOVE 0 TO LOOP-INDEX
     MOVE 0 TO SUBI
     MOVE "--- Pending Connection Requests ---" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE
-    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 UNTIL LOOP-INDEX > CONNECTION-COUNT
-        IF FUNCTION UPPER-CASE(FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX))) = FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+    
+    *> First, count how many pending requests exist
+    MOVE 0 TO SUBI
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 
+      UNTIL LOOP-INDEX > CONNECTION-COUNT
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX))) = 
+           FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
             ADD 1 TO SUBI
+        END-IF
+    END-PERFORM
+    
+    IF SUBI = 0
+        MOVE "You have no pending connection requests." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        EXIT PARAGRAPH
+    END-IF
+    
+    *> Process each pending request
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 
+      UNTIL LOOP-INDEX > CONNECTION-COUNT
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX))) = 
+           FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
             MOVE SPACES TO MESSAGE-BUFFER
-            STRING "From: " DELIMITED BY SIZE
+            STRING "Request from: " DELIMITED BY SIZE
                    FUNCTION TRIM(CONN-SENDER(LOOP-INDEX)) DELIMITED BY SIZE
               INTO MESSAGE-BUFFER
             END-STRING
             PERFORM 700-DISPLAY-MESSAGE
+            
+            *> Store the request index for processing
+            MOVE LOOP-INDEX TO PROFILE-IDX
+            PERFORM 925-PROCESS-SINGLE-REQUEST
         END-IF
     END-PERFORM
-    IF SUBI = 0
-        MOVE "You have no pending connection requests." TO MESSAGE-BUFFER
-        PERFORM 700-DISPLAY-MESSAGE
-    END-IF
+    
     MOVE "--------------------" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE.
 
 *> =====================
-*> NEW: Send connection request logic
+*> NEW: Process individual connection request
 *> =====================
+925-PROCESS-SINGLE-REQUEST.
+    MOVE "1. Accept" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    MOVE "2. Reject" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    MOVE SPACES TO MESSAGE-BUFFER
+    STRING "Enter your choice for " DELIMITED BY SIZE
+           FUNCTION TRIM(CONN-SENDER(PROFILE-IDX)) DELIMITED BY SIZE
+           ":" DELIMITED BY SIZE
+      INTO MESSAGE-BUFFER
+    END-STRING
+    PERFORM 700-DISPLAY-MESSAGE
+    
+    PERFORM 600-GET-USER-INPUT
+    IF NO-MORE-DATA EXIT PARAGRAPH END-IF
+    
+    MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(INPUT-BUFFER)) 
+      TO NORMALIZED-INPUT
+    
+    EVALUATE TRUE
+        WHEN NORMALIZED-INPUT = "1" OR NORMALIZED-INPUT = "ACCEPT"
+            PERFORM 926-ACCEPT-CONNECTION-REQUEST
+        WHEN NORMALIZED-INPUT = "2" OR NORMALIZED-INPUT = "REJECT"
+            PERFORM 927-REJECT-CONNECTION-REQUEST
+        WHEN OTHER
+            MOVE "Invalid choice. Request will remain pending." 
+              TO MESSAGE-BUFFER
+            PERFORM 700-DISPLAY-MESSAGE
+    END-EVALUATE.
+
 *> =====================
-*> NEW: Send connection request logic
+*> NEW: Accept connection request
+*> =====================
+926-ACCEPT-CONNECTION-REQUEST.
+    *> Add to permanent connections (both directions)
+    IF PERMANENT-COUNT < MAX-PERMANENT-CONNECTIONS
+        ADD 1 TO PERMANENT-COUNT
+        MOVE FUNCTION TRIM(CONN-SENDER(PROFILE-IDX)) 
+          TO PERM-USER1(PERMANENT-COUNT)
+        MOVE FUNCTION TRIM(CURRENT-USER) 
+          TO PERM-USER2(PERMANENT-COUNT)
+        
+        *> Also add reverse connection
+        IF PERMANENT-COUNT < MAX-PERMANENT-CONNECTIONS
+            ADD 1 TO PERMANENT-COUNT
+            MOVE FUNCTION TRIM(CURRENT-USER) 
+              TO PERM-USER1(PERMANENT-COUNT)
+            MOVE FUNCTION TRIM(CONN-SENDER(PROFILE-IDX)) 
+              TO PERM-USER2(PERMANENT-COUNT)
+        END-IF
+        
+        *> Remove from pending requests
+        PERFORM 928-REMOVE-PENDING-REQUEST
+        
+        MOVE SPACES TO MESSAGE-BUFFER
+        STRING "Connection request from " DELIMITED BY SIZE
+               FUNCTION TRIM(CONN-SENDER(PROFILE-IDX)) DELIMITED BY SIZE
+               " accepted!" DELIMITED BY SIZE
+          INTO MESSAGE-BUFFER
+        END-STRING
+        PERFORM 700-DISPLAY-MESSAGE
+        
+        *> Save changes
+        PERFORM 970-SAVE-PERMANENT-CONNECTIONS
+        PERFORM 960-SAVE-CONNECTIONS
+    ELSE
+        MOVE "Cannot accept: connection limit reached." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+    END-IF.
+
+*> =====================
+*> NEW: Reject connection request
+*> =====================
+927-REJECT-CONNECTION-REQUEST.
+    PERFORM 928-REMOVE-PENDING-REQUEST
+    MOVE SPACES TO MESSAGE-BUFFER
+    STRING "Connection request from " DELIMITED BY SIZE
+           FUNCTION TRIM(CONN-SENDER(PROFILE-IDX)) DELIMITED BY SIZE
+           " rejected." DELIMITED BY SIZE
+      INTO MESSAGE-BUFFER
+    END-STRING
+    PERFORM 700-DISPLAY-MESSAGE
+    PERFORM 960-SAVE-CONNECTIONS.
+
+*> =====================
+*> NEW: Remove pending request from table
+*> =====================
+928-REMOVE-PENDING-REQUEST.
+    *> Shift all subsequent entries up
+    IF PROFILE-IDX < CONNECTION-COUNT
+        PERFORM VARYING LOOP-INDEX FROM PROFILE-IDX BY 1
+          UNTIL LOOP-INDEX >= CONNECTION-COUNT
+            MOVE CONN-SENDER(LOOP-INDEX + 1) 
+              TO CONN-SENDER(LOOP-INDEX)
+            MOVE CONN-RECEIVER(LOOP-INDEX + 1) 
+              TO CONN-RECEIVER(LOOP-INDEX)
+        END-PERFORM
+    END-IF
+    SUBTRACT 1 FROM CONNECTION-COUNT.
+*> =====================
+*> NEW: Process individual connection request
+*> ====================
+
+*> =====================
+*> NEW: Accept connection request
 *> =====================
 910-SEND-CONNECTION-REQUESTS.
     *> Check for self-request
@@ -1129,6 +1286,7 @@ END-IF.
 
     PERFORM 870-SAVE-PROFILES.
     PERFORM 960-SAVE-CONNECTIONS.
+    PERFORM 970-SAVE-PERMANENT-CONNECTIONS.
 
     MOVE "--- END_OF_PROGRAM_EXECUTION ---" TO MESSAGE-BUFFER.
     PERFORM 700-DISPLAY-MESSAGE.
@@ -1346,3 +1504,61 @@ END-IF.
     CLOSE USER-CONNECTIONS
     DISPLAY "DEBUG: 960 - CLOSE USER-CONNECTIONS done."
     .
+
+*> =====================
+*> NEW: Save permanent connections
+*> =====================
+970-SAVE-PERMANENT-CONNECTIONS.
+    OPEN OUTPUT PERMANENT-CONNECTIONS
+    IF PERM-CONN-FILE-STATUS NOT = "00"
+        DISPLAY "Error saving permanent connections: " 
+                PERM-CONN-FILE-STATUS
+        EXIT PARAGRAPH
+    END-IF
+    
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1
+        UNTIL LOOP-INDEX > PERMANENT-COUNT
+        MOVE SPACES TO PERM-CONNECTION-REC
+        STRING FUNCTION TRIM(PERM-USER1(LOOP-INDEX)) DELIMITED BY SIZE
+               "|" DELIMITED BY SIZE
+               FUNCTION TRIM(PERM-USER2(LOOP-INDEX)) DELIMITED BY SIZE
+          INTO PERM-CONNECTION-REC
+        END-STRING
+        WRITE PERM-CONNECTION-REC
+    END-PERFORM
+    
+    CLOSE PERMANENT-CONNECTIONS.
+
+*> =====================
+*> NEW: Load permanent connections at startup
+*> =====================
+975-LOAD-PERMANENT-CONNECTIONS.
+    OPEN INPUT PERMANENT-CONNECTIONS
+    IF PERM-CONN-FILE-STATUS = "35"
+        *> File doesn't exist yet, that's OK
+        CLOSE PERMANENT-CONNECTIONS
+        EXIT PARAGRAPH
+    END-IF
+    
+    IF PERM-CONN-FILE-STATUS NOT = "00"
+        DISPLAY "Error loading permanent connections: " 
+                PERM-CONN-FILE-STATUS
+        CLOSE PERMANENT-CONNECTIONS
+        EXIT PARAGRAPH
+    END-IF
+    
+    MOVE 0 TO PERMANENT-COUNT
+    PERFORM FOREVER
+        READ PERMANENT-CONNECTIONS
+            AT END EXIT PERFORM
+        END-READ
+        IF FUNCTION TRIM(PERM-CONNECTION-REC) NOT = SPACES
+            ADD 1 TO PERMANENT-COUNT
+            UNSTRING PERM-CONNECTION-REC DELIMITED BY "|"
+                INTO PERM-USER1(PERMANENT-COUNT)
+                     PERM-USER2(PERMANENT-COUNT)
+            END-UNSTRING
+        END-IF
+    END-PERFORM
+    
+    CLOSE PERMANENT-CONNECTIONS.
