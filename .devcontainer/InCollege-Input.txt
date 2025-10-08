@@ -1,19 +1,6 @@
-2
-TestUser
-Password1!
 1
-TestUser
+AliceGomes
 Password1!
-4
-Test
-User
-USF
-Computer Science
-2025
-I am a test user.
-done
-done
-6
 2
-New Student
-99
+Test User
+Y
