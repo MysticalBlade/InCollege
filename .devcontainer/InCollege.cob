@@ -344,10 +344,8 @@ PROCEDURE DIVISION.
     MOVE INPUT-PASSWORD TO ACCT-PASS(ACCOUNT-COUNT)
     MOVE "Account created successfully." TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE.
-*> =====================
-*> UPDATED: Post-login menu to include Profile features
-*> =====================
-*> =====================
+
+*>=======================
 *> UPDATED: Post-login menu to include Network view
 *> =====================
 500-POST-LOGIN-OPERATIONS.
@@ -552,15 +550,7 @@ IF NORMALIZED-INPUT = "Y" OR NORMALIZED-INPUT = "YES"
     PERFORM 910-SEND-CONNECTION-REQUESTS
 END-IF.
 
-*> =====================
-*> NEW: View pending connection requests
-*> =====================
-*> =====================
-*> UPDATED: View pending connection requests with accept/reject
-*> =====================
-*> =====================
-*> UPDATED: View pending connection requests with accept/reject
-*> =====================
+
 *> =====================
 *> UPDATED: View pending connection requests with accept/reject
 *> =====================
@@ -709,13 +699,8 @@ END-IF.
         END-PERFORM
     END-IF
     SUBTRACT 1 FROM CONNECTION-COUNT.
-*> =====================
-*> NEW: Process individual connection request
-*> ====================
 
-*> =====================
-*> NEW: Accept connection request
-*> =====================
+
 910-SEND-CONNECTION-REQUESTS.
     *> Check for self-request
     IF FUNCTION TRIM(CURRENT-USER) = FUNCTION TRIM(P-USER(PROFILE-IDX))
@@ -1209,7 +1194,7 @@ END-IF.
 *> NEW: Persistence (load/save)
 *> =====================
 860-LOAD-PROFILES.
-    DISPLAY "DEBUG: 860 - About to OPEN USER-PROFILES for INPUT." *> DEBUG
+    DISPLAY "DEBUG: 860 - About to OPEN USER-PROFILES for INPUT." *>debug
     OPEN INPUT USER-PROFILES
 
     IF PROFILE-FILE-STATUS = "00"
@@ -1514,7 +1499,7 @@ END-IF.
 975-LOAD-PERMANENT-CONNECTIONS.
     OPEN INPUT PERMANENT-CONNECTIONS
     IF PERM-CONN-FILE-STATUS = "35"
-        *> File doesn't exist yet, that's OK
+
         CLOSE PERMANENT-CONNECTIONS
         EXIT PARAGRAPH
     END-IF
@@ -1542,9 +1527,6 @@ END-IF.
 
     CLOSE PERMANENT-CONNECTIONS.
 
-*> =====================
-*> UPDATED: View My Network functionality to match sample format
-*> =====================
 *> =====================
 *> UPDATED: View My Network functionality to match sample format
 *> =====================
