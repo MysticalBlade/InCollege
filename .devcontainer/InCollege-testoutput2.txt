@@ -1,0 +1,30 @@
+#Mix case accepting A but not B
+Welcome to InCollege!
+Log In
+Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in.
+Welcome, AliceGomes!
+1. View My Profile
+2. Search for User
+3. Learn a New Skill
+4. View My Pending Connection Requests
+5. View My Network
+Enter your choice:
+--- Pending Connection Requests ---
+Request from: UserA
+1. Accept
+2. Reject
+Enter your choice for UserA:
+Connection request from UserB accepted!
+--------------------
+1. View My Profile
+2. Search for User
+3. Learn a New Skill
+4. View My Pending Connection Requests
+5. View My Network
+Enter your choice:
+Enter the full name of the person you are looking for:
+--- END_OF_PROGRAM_EXECUTION ---

@@ -1,2 +1,4 @@
 AliceGomes|TestUser
 TestUser|AliceGomes
+UserA|AliceGomes
+AliceGomes|UserA

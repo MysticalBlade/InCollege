@@ -1,21 +1,15 @@
-2
-alice
-P@ssw0rd!
-2
-bob
-S3cur3P@ss!
-
+#log in as A and B to both send request to Alice
 1
-alice
-P@ssw0rd!
-4
-Alice
-Liddell
-Wonderland University
-Computer Science
-2027
-Curious CS student.
-done
-done
+UserB
+IAmUserB1!
+2
+Alice Gomes
+Y
 
-0
+-----------------------------------------------------------------
+#log in as Alice and see if she can see and accept multiple pending requests
+1
+AliceGomes
+Password1!
+4
+
