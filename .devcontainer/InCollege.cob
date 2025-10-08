@@ -352,20 +352,16 @@ PROCEDURE DIVISION.
 *> =====================
 500-POST-LOGIN-OPERATIONS.
     PERFORM UNTIL NO-MORE-DATA
-        MOVE "Search for a job" TO MESSAGE-BUFFER
+        *> Updated menu to match sample output exactly
+        MOVE "1. View My Profile" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
-        MOVE "Find someone you know" TO MESSAGE-BUFFER
+        MOVE "2. Search for User" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
-        MOVE "Learn a new skill" TO MESSAGE-BUFFER
+        MOVE "3. Learn a New Skill" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
-        MOVE "Create/Edit My Profile" TO MESSAGE-BUFFER
+        MOVE "4. View My Pending Connection Requests" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
-        MOVE "View My Profile" TO MESSAGE-BUFFER
-        PERFORM 700-DISPLAY-MESSAGE
-        MOVE "View My Pending Connection Requests" TO MESSAGE-BUFFER
-        PERFORM 700-DISPLAY-MESSAGE
-        *> NEW: View Network option
-        MOVE "View My Network" TO MESSAGE-BUFFER
+        MOVE "5. View My Network" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
         MOVE "Enter your choice:" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
@@ -379,41 +375,24 @@ PROCEDURE DIVISION.
 
         EVALUATE TRUE
            WHEN NORMALIZED-INPUT = "1"
-             OR NORMALIZED-INPUT = "SEARCH FOR A JOB"
-             OR NORMALIZED-INPUT = "SEARCH JOB"
-             OR NORMALIZED-INPUT = "SEARCH"
-               MOVE "Job search/internship is under construction." 
-                 TO MESSAGE-BUFFER
-               PERFORM 700-DISPLAY-MESSAGE
+             OR NORMALIZED-INPUT = "VIEW MY PROFILE"
+               PERFORM 565-VIEW-MY-PROFILE
 
            WHEN NORMALIZED-INPUT = "2"
-             OR NORMALIZED-INPUT = "FIND SOMEONE YOU KNOW"
-             OR NORMALIZED-INPUT = "FIND USER"
-             OR NORMALIZED-INPUT = "FIND"
+             OR NORMALIZED-INPUT = "SEARCH FOR USER"
                PERFORM 570-SEARCH-AND-DISPLAY-PROFILE
 
            WHEN NORMALIZED-INPUT = "3"
              OR NORMALIZED-INPUT = "LEARN A NEW SKILL"
-             OR NORMALIZED-INPUT = "LEARN"
                PERFORM 550-SKILLS-MODULE
 
            WHEN NORMALIZED-INPUT = "4"
-             OR NORMALIZED-INPUT = "CREATE/EDIT MY PROFILE"
-             OR NORMALIZED-INPUT = "CREATE PROFILE"
-             OR NORMALIZED-INPUT = "EDIT PROFILE"
-               PERFORM 560-CREATE-OR-EDIT-PROFILE
-
-           WHEN NORMALIZED-INPUT = "5"
-             OR NORMALIZED-INPUT = "VIEW MY PROFILE"
-             OR NORMALIZED-INPUT = "VIEW PROFILE"
-               PERFORM 565-VIEW-MY-PROFILE
-
-           WHEN NORMALIZED-INPUT = "6"
              OR NORMALIZED-INPUT = "VIEW MY PENDING CONNECTION REQUESTS"
-             OR NORMALIZED-INPUT = "VIEW PENDING CONNECTIONS"
-             OR NORMALIZED-INPUT = "VIEW CONNECTION REQUESTS"
                PERFORM 920-VIEW-PENDING-REQUESTS
 
+           WHEN NORMALIZED-INPUT = "5"
+             OR NORMALIZED-INPUT = "VIEW MY NETWORK"
+               PERFORM 580-VIEW-MY-NETWORK
 
            WHEN OTHER
                CONTINUE
@@ -1562,3 +1541,76 @@ END-IF.
     END-PERFORM
     
     CLOSE PERMANENT-CONNECTIONS.
+
+*> =====================
+*> UPDATED: View My Network functionality to match sample format
+*> =====================
+*> =====================
+*> UPDATED: View My Network functionality to match sample format
+*> =====================
+580-VIEW-MY-NETWORK.
+    MOVE "--- Your Network ---" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    
+    MOVE 0 TO LOOP-INDEX
+    MOVE 0 TO SUBI
+    
+    *> Count connections for current user
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 
+      UNTIL LOOP-INDEX > PERMANENT-COUNT
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(PERM-USER1(LOOP-INDEX))) = 
+           FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+            ADD 1 TO SUBI
+        END-IF
+    END-PERFORM
+    
+    IF SUBI = 0
+        MOVE "You have no connections in your network yet." 
+          TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        EXIT PARAGRAPH
+    END-IF
+    
+    *> Display all connections in the exact sample format
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 
+      UNTIL LOOP-INDEX > PERMANENT-COUNT
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(PERM-USER1(LOOP-INDEX))) = 
+           FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
+            *> Find profile info for this connection
+            MOVE 0 TO PROFILE-IDX
+            PERFORM VARYING SUBI FROM 1 BY 1 UNTIL SUBI > PROFILE-COUNT
+                IF FUNCTION TRIM(PERM-USER2(LOOP-INDEX)) = 
+                   FUNCTION TRIM(P-USER(SUBI))
+                    MOVE SUBI TO PROFILE-IDX
+                    EXIT PERFORM
+                END-IF
+            END-PERFORM
+            
+            *> Display in exact sample format: "Connected with: Username (University: X, Major: Y)"
+            MOVE SPACES TO MESSAGE-BUFFER
+            IF PROFILE-IDX > 0
+                *> If profile exists, show username, university and major
+                STRING "Connected with: " DELIMITED BY SIZE
+                       FUNCTION TRIM(PERM-USER2(LOOP-INDEX)) DELIMITED BY SIZE
+                       " (University: " DELIMITED BY SIZE
+                       FUNCTION TRIM(P-UNIV(PROFILE-IDX)) DELIMITED BY SIZE
+                       ", Major: " DELIMITED BY SIZE
+                       FUNCTION TRIM(P-MAJOR(PROFILE-IDX)) DELIMITED BY SIZE
+                       ")" DELIMITED BY SIZE
+                  INTO MESSAGE-BUFFER
+                END-STRING
+            ELSE
+                *> If no profile, just show username
+                STRING "Connected with: " DELIMITED BY SIZE
+                       FUNCTION TRIM(PERM-USER2(LOOP-INDEX)) DELIMITED BY SIZE
+                  INTO MESSAGE-BUFFER
+                END-STRING
+            END-IF
+            
+            PERFORM 700-DISPLAY-MESSAGE
+        END-IF
+    END-PERFORM
+    
+    MOVE "--------------------" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE.
+    
