@@ -344,10 +344,8 @@ PROCEDURE DIVISION.
     MOVE INPUT-PASSWORD TO ACCT-PASS(ACCOUNT-COUNT)
     MOVE "Account created successfully." TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE.
-*> =====================
-*> UPDATED: Post-login menu to include Profile features
-*> =====================
-*> =====================
+
+*>=======================
 *> UPDATED: Post-login menu to include Network view
 *> =====================
 500-POST-LOGIN-OPERATIONS.
@@ -552,15 +550,7 @@ IF NORMALIZED-INPUT = "Y" OR NORMALIZED-INPUT = "YES"
     PERFORM 910-SEND-CONNECTION-REQUESTS
 END-IF.
 
-*> =====================
-*> NEW: View pending connection requests
-*> =====================
-*> =====================
-*> UPDATED: View pending connection requests with accept/reject
-*> =====================
-*> =====================
-*> UPDATED: View pending connection requests with accept/reject
-*> =====================
+
 *> =====================
 *> UPDATED: View pending connection requests with accept/reject
 *> =====================
@@ -569,27 +559,27 @@ END-IF.
     MOVE 0 TO SUBI
     MOVE "--- Pending Connection Requests ---" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE
-    
+
     *> First, count how many pending requests exist
     MOVE 0 TO SUBI
-    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1
       UNTIL LOOP-INDEX > CONNECTION-COUNT
-        IF FUNCTION UPPER-CASE(FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX))) = 
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX))) =
            FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
             ADD 1 TO SUBI
         END-IF
     END-PERFORM
-    
+
     IF SUBI = 0
         MOVE "You have no pending connection requests." TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
         EXIT PARAGRAPH
     END-IF
-    
+
     *> Process each pending request
-    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1
       UNTIL LOOP-INDEX > CONNECTION-COUNT
-        IF FUNCTION UPPER-CASE(FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX))) = 
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX))) =
            FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
             MOVE SPACES TO MESSAGE-BUFFER
             STRING "Request from: " DELIMITED BY SIZE
@@ -597,13 +587,13 @@ END-IF.
               INTO MESSAGE-BUFFER
             END-STRING
             PERFORM 700-DISPLAY-MESSAGE
-            
+
             *> Store the request index for processing
             MOVE LOOP-INDEX TO PROFILE-IDX
             PERFORM 925-PROCESS-SINGLE-REQUEST
         END-IF
     END-PERFORM
-    
+
     MOVE "--------------------" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE.
 
@@ -622,20 +612,20 @@ END-IF.
       INTO MESSAGE-BUFFER
     END-STRING
     PERFORM 700-DISPLAY-MESSAGE
-    
+
     PERFORM 600-GET-USER-INPUT
     IF NO-MORE-DATA EXIT PARAGRAPH END-IF
-    
-    MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(INPUT-BUFFER)) 
+
+    MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(INPUT-BUFFER))
       TO NORMALIZED-INPUT
-    
+
     EVALUATE TRUE
         WHEN NORMALIZED-INPUT = "1" OR NORMALIZED-INPUT = "ACCEPT"
             PERFORM 926-ACCEPT-CONNECTION-REQUEST
         WHEN NORMALIZED-INPUT = "2" OR NORMALIZED-INPUT = "REJECT"
             PERFORM 927-REJECT-CONNECTION-REQUEST
         WHEN OTHER
-            MOVE "Invalid choice. Request will remain pending." 
+            MOVE "Invalid choice. Request will remain pending."
               TO MESSAGE-BUFFER
             PERFORM 700-DISPLAY-MESSAGE
     END-EVALUATE.
@@ -647,23 +637,23 @@ END-IF.
     *> Add to permanent connections (both directions)
     IF PERMANENT-COUNT < MAX-PERMANENT-CONNECTIONS
         ADD 1 TO PERMANENT-COUNT
-        MOVE FUNCTION TRIM(CONN-SENDER(PROFILE-IDX)) 
+        MOVE FUNCTION TRIM(CONN-SENDER(PROFILE-IDX))
           TO PERM-USER1(PERMANENT-COUNT)
-        MOVE FUNCTION TRIM(CURRENT-USER) 
+        MOVE FUNCTION TRIM(CURRENT-USER)
           TO PERM-USER2(PERMANENT-COUNT)
-        
+
         *> Also add reverse connection
         IF PERMANENT-COUNT < MAX-PERMANENT-CONNECTIONS
             ADD 1 TO PERMANENT-COUNT
-            MOVE FUNCTION TRIM(CURRENT-USER) 
+            MOVE FUNCTION TRIM(CURRENT-USER)
               TO PERM-USER1(PERMANENT-COUNT)
-            MOVE FUNCTION TRIM(CONN-SENDER(PROFILE-IDX)) 
+            MOVE FUNCTION TRIM(CONN-SENDER(PROFILE-IDX))
               TO PERM-USER2(PERMANENT-COUNT)
         END-IF
-        
+
         *> Remove from pending requests
         PERFORM 928-REMOVE-PENDING-REQUEST
-        
+
         MOVE SPACES TO MESSAGE-BUFFER
         STRING "Connection request from " DELIMITED BY SIZE
                FUNCTION TRIM(CONN-SENDER(PROFILE-IDX)) DELIMITED BY SIZE
@@ -671,7 +661,7 @@ END-IF.
           INTO MESSAGE-BUFFER
         END-STRING
         PERFORM 700-DISPLAY-MESSAGE
-        
+
         *> Save changes
         PERFORM 970-SAVE-PERMANENT-CONNECTIONS
         PERFORM 960-SAVE-CONNECTIONS
@@ -702,20 +692,15 @@ END-IF.
     IF PROFILE-IDX < CONNECTION-COUNT
         PERFORM VARYING LOOP-INDEX FROM PROFILE-IDX BY 1
           UNTIL LOOP-INDEX >= CONNECTION-COUNT
-            MOVE CONN-SENDER(LOOP-INDEX + 1) 
+            MOVE CONN-SENDER(LOOP-INDEX + 1)
               TO CONN-SENDER(LOOP-INDEX)
-            MOVE CONN-RECEIVER(LOOP-INDEX + 1) 
+            MOVE CONN-RECEIVER(LOOP-INDEX + 1)
               TO CONN-RECEIVER(LOOP-INDEX)
         END-PERFORM
     END-IF
     SUBTRACT 1 FROM CONNECTION-COUNT.
-*> =====================
-*> NEW: Process individual connection request
-*> ====================
 
-*> =====================
-*> NEW: Accept connection request
-*> =====================
+
 910-SEND-CONNECTION-REQUESTS.
     *> Check for self-request
     IF FUNCTION TRIM(CURRENT-USER) = FUNCTION TRIM(P-USER(PROFILE-IDX))
@@ -1209,7 +1194,7 @@ END-IF.
 *> NEW: Persistence (load/save)
 *> =====================
 860-LOAD-PROFILES.
-    DISPLAY "DEBUG: 860 - About to OPEN USER-PROFILES for INPUT." *> DEBUG
+    DISPLAY "DEBUG: 860 - About to OPEN USER-PROFILES for INPUT." *>debug
     OPEN INPUT USER-PROFILES
 
     IF PROFILE-FILE-STATUS = "00"
@@ -1490,11 +1475,11 @@ END-IF.
 970-SAVE-PERMANENT-CONNECTIONS.
     OPEN OUTPUT PERMANENT-CONNECTIONS
     IF PERM-CONN-FILE-STATUS NOT = "00"
-        DISPLAY "Error saving permanent connections: " 
+        DISPLAY "Error saving permanent connections: "
                 PERM-CONN-FILE-STATUS
         EXIT PARAGRAPH
     END-IF
-    
+
     PERFORM VARYING LOOP-INDEX FROM 1 BY 1
         UNTIL LOOP-INDEX > PERMANENT-COUNT
         MOVE SPACES TO PERM-CONNECTION-REC
@@ -1505,7 +1490,7 @@ END-IF.
         END-STRING
         WRITE PERM-CONNECTION-REC
     END-PERFORM
-    
+
     CLOSE PERMANENT-CONNECTIONS.
 
 *> =====================
@@ -1514,18 +1499,18 @@ END-IF.
 975-LOAD-PERMANENT-CONNECTIONS.
     OPEN INPUT PERMANENT-CONNECTIONS
     IF PERM-CONN-FILE-STATUS = "35"
-        *> File doesn't exist yet, that's OK
+
         CLOSE PERMANENT-CONNECTIONS
         EXIT PARAGRAPH
     END-IF
-    
+
     IF PERM-CONN-FILE-STATUS NOT = "00"
-        DISPLAY "Error loading permanent connections: " 
+        DISPLAY "Error loading permanent connections: "
                 PERM-CONN-FILE-STATUS
         CLOSE PERMANENT-CONNECTIONS
         EXIT PARAGRAPH
     END-IF
-    
+
     MOVE 0 TO PERMANENT-COUNT
     PERFORM FOREVER
         READ PERMANENT-CONNECTIONS
@@ -1539,53 +1524,50 @@ END-IF.
             END-UNSTRING
         END-IF
     END-PERFORM
-    
+
     CLOSE PERMANENT-CONNECTIONS.
 
-*> =====================
-*> UPDATED: View My Network functionality to match sample format
-*> =====================
 *> =====================
 *> UPDATED: View My Network functionality to match sample format
 *> =====================
 580-VIEW-MY-NETWORK.
     MOVE "--- Your Network ---" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE
-    
+
     MOVE 0 TO LOOP-INDEX
     MOVE 0 TO SUBI
-    
+
     *> Count connections for current user
-    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1
       UNTIL LOOP-INDEX > PERMANENT-COUNT
-        IF FUNCTION UPPER-CASE(FUNCTION TRIM(PERM-USER1(LOOP-INDEX))) = 
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(PERM-USER1(LOOP-INDEX))) =
            FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
             ADD 1 TO SUBI
         END-IF
     END-PERFORM
-    
+
     IF SUBI = 0
-        MOVE "You have no connections in your network yet." 
+        MOVE "You have no connections in your network yet."
           TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
         EXIT PARAGRAPH
     END-IF
-    
+
     *> Display all connections in the exact sample format
-    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1
       UNTIL LOOP-INDEX > PERMANENT-COUNT
-        IF FUNCTION UPPER-CASE(FUNCTION TRIM(PERM-USER1(LOOP-INDEX))) = 
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(PERM-USER1(LOOP-INDEX))) =
            FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
             *> Find profile info for this connection
             MOVE 0 TO PROFILE-IDX
             PERFORM VARYING SUBI FROM 1 BY 1 UNTIL SUBI > PROFILE-COUNT
-                IF FUNCTION TRIM(PERM-USER2(LOOP-INDEX)) = 
+                IF FUNCTION TRIM(PERM-USER2(LOOP-INDEX)) =
                    FUNCTION TRIM(P-USER(SUBI))
                     MOVE SUBI TO PROFILE-IDX
                     EXIT PERFORM
                 END-IF
             END-PERFORM
-            
+
             *> Display in exact sample format: "Connected with: Username (University: X, Major: Y)"
             MOVE SPACES TO MESSAGE-BUFFER
             IF PROFILE-IDX > 0
@@ -1606,11 +1588,10 @@ END-IF.
                   INTO MESSAGE-BUFFER
                 END-STRING
             END-IF
-            
+
             PERFORM 700-DISPLAY-MESSAGE
         END-IF
     END-PERFORM
-    
+
     MOVE "--------------------" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE.
-    
