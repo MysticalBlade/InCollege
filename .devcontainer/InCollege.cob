@@ -9,9 +9,9 @@ OBJECT-COMPUTER. GNUCOBOL.
 
 INPUT-OUTPUT SECTION.
 FILE-CONTROL.
-    SELECT USER-INPUT ASSIGN TO 'InCollege-test3.txt'
+    SELECT USER-INPUT ASSIGN TO 'InCollege-Input.txt'
         ORGANIZATION IS LINE SEQUENTIAL.
-    SELECT PROGRAM-OUTPUT ASSIGN TO 'InCollege-testoutput3.txt'
+    SELECT PROGRAM-OUTPUT ASSIGN TO 'InCollege-Output.txt'
         ORGANIZATION IS LINE SEQUENTIAL.
     SELECT USER-ACCOUNTS ASSIGN TO 'Accounts.dat'
         ORGANIZATION IS LINE SEQUENTIAL
@@ -26,6 +26,10 @@ FILE-CONTROL.
     SELECT PERMANENT-CONNECTIONS ASSIGN TO 'PermanentConnections.dat'
         ORGANIZATION IS LINE SEQUENTIAL
         FILE STATUS IS PERM-CONN-FILE-STATUS.
+
+    SELECT USER-JOBS ASSIGN TO 'Jobs.dat'
+        ORGANIZATION IS LINE SEQUENTIAL
+        FILE STATUS IS JOB-FILE-STATUS.
 
 DATA DIVISION.
 FILE SECTION.
@@ -48,6 +52,17 @@ FD  USER-CONNECTIONS.
 
 FD  PERMANENT-CONNECTIONS.
 01  PERM-CONNECTION-REC         PIC X(200).
+
+FD  USER-JOBS.
+01  JOB-REC.
+    05  JOB-ID        PIC 9(4).
+    05  JOB-TITLE     PIC X(50).
+    05  JOB-DESC      PIC X(200).
+    05  JOB-EMPLOYER  PIC X(50).
+    05  JOB-LOCATION  PIC X(50).
+    05  JOB-SALARY    PIC X(30).
+    05  JOB-POSTER    PIC X(20).
+
 
 WORKING-STORAGE SECTION.
 
@@ -101,6 +116,20 @@ WORKING-STORAGE SECTION.
 
 01  AVAILABLE-SKILLS.
     05  SKILL-LIST OCCURS 5 TIMES PIC X(40) VALUE SPACES.
+
+01  MAX-JOBS        PIC 99 VALUE 25.
+01  JOB-TABLE.
+    05  JOB-COUNT    PIC 99 VALUE 0.
+    05  JOB-ENTRY OCCURS 25 TIMES.
+        10  J-ID         PIC 9(4).
+        10  J-TITLE      PIC X(50).
+        10  J-DESC       PIC X(200).
+        10  J-EMPLOYER   PIC X(50).
+        10  J-LOCATION   PIC X(50).
+        10  J-SALARY     PIC X(30).
+        10  J-POSTER     PIC X(20).
+01  JOB-FILE-STATUS PIC XX.
+
 
 *> =====================
 *> NEW: Profile structures (in-memory)
@@ -209,9 +238,11 @@ PROCEDURE DIVISION.
     PERFORM 860-LOAD-PROFILES.
     PERFORM 950-LOAD-CONNECTIONS.
     PERFORM 975-LOAD-PERMANENT-CONNECTIONS.
+    PERFORM 934-LOAD-JOBS.
 
     MOVE "Welcome to InCollege!" TO MESSAGE-BUFFER.
     PERFORM 700-DISPLAY-MESSAGE.
+
 
 200-MAIN-LOOP.
     MOVE "Log In" TO MESSAGE-BUFFER
@@ -344,18 +375,19 @@ PROCEDURE DIVISION.
     MOVE INPUT-PASSWORD TO ACCT-PASS(ACCOUNT-COUNT)
     MOVE "Account created successfully." TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE.
-
-*>=======================
+*> =====================
+*> UPDATED: Post-login menu to include Profile features
+*> =====================
+*> =====================
 *> UPDATED: Post-login menu to include Network view
 *> =====================
 500-POST-LOGIN-OPERATIONS.
     PERFORM UNTIL NO-MORE-DATA
-        *> Updated menu to match sample output exactly
-        MOVE "1. View My Profile" TO MESSAGE-BUFFER
+        MOVE "1. Search for a job" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
-        MOVE "2. Search for User" TO MESSAGE-BUFFER
+        MOVE "2. Find someone you know" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
-        MOVE "3. Learn a New Skill" TO MESSAGE-BUFFER
+        MOVE "3. Learn a new skill" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
         MOVE "4. View My Pending Connection Requests" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
@@ -373,8 +405,9 @@ PROCEDURE DIVISION.
 
         EVALUATE TRUE
            WHEN NORMALIZED-INPUT = "1"
-             OR NORMALIZED-INPUT = "VIEW MY PROFILE"
-               PERFORM 565-VIEW-MY-PROFILE
+             OR NORMALIZED-INPUT = "SEARCH FOR A JOB"
+             OR NORMALIZED-INPUT = "JOB"
+               PERFORM 930-JOB-SEARCH-MENU
 
            WHEN NORMALIZED-INPUT = "2"
              OR NORMALIZED-INPUT = "SEARCH FOR USER"
@@ -391,6 +424,8 @@ PROCEDURE DIVISION.
            WHEN NORMALIZED-INPUT = "5"
              OR NORMALIZED-INPUT = "VIEW MY NETWORK"
                PERFORM 580-VIEW-MY-NETWORK
+
+           
 
            WHEN OTHER
                CONTINUE
@@ -550,7 +585,15 @@ IF NORMALIZED-INPUT = "Y" OR NORMALIZED-INPUT = "YES"
     PERFORM 910-SEND-CONNECTION-REQUESTS
 END-IF.
 
-
+*> =====================
+*> NEW: View pending connection requests
+*> =====================
+*> =====================
+*> UPDATED: View pending connection requests with accept/reject
+*> =====================
+*> =====================
+*> UPDATED: View pending connection requests with accept/reject
+*> =====================
 *> =====================
 *> UPDATED: View pending connection requests with accept/reject
 *> =====================
@@ -559,27 +602,27 @@ END-IF.
     MOVE 0 TO SUBI
     MOVE "--- Pending Connection Requests ---" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE
-
+    
     *> First, count how many pending requests exist
     MOVE 0 TO SUBI
-    PERFORM VARYING LOOP-INDEX FROM 1 BY 1
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 
       UNTIL LOOP-INDEX > CONNECTION-COUNT
-        IF FUNCTION UPPER-CASE(FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX))) =
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX))) = 
            FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
             ADD 1 TO SUBI
         END-IF
     END-PERFORM
-
+    
     IF SUBI = 0
         MOVE "You have no pending connection requests." TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
         EXIT PARAGRAPH
     END-IF
-
+    
     *> Process each pending request
-    PERFORM VARYING LOOP-INDEX FROM 1 BY 1
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 
       UNTIL LOOP-INDEX > CONNECTION-COUNT
-        IF FUNCTION UPPER-CASE(FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX))) =
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX))) = 
            FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
             MOVE SPACES TO MESSAGE-BUFFER
             STRING "Request from: " DELIMITED BY SIZE
@@ -587,13 +630,13 @@ END-IF.
               INTO MESSAGE-BUFFER
             END-STRING
             PERFORM 700-DISPLAY-MESSAGE
-
+            
             *> Store the request index for processing
             MOVE LOOP-INDEX TO PROFILE-IDX
             PERFORM 925-PROCESS-SINGLE-REQUEST
         END-IF
     END-PERFORM
-
+    
     MOVE "--------------------" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE.
 
@@ -612,20 +655,20 @@ END-IF.
       INTO MESSAGE-BUFFER
     END-STRING
     PERFORM 700-DISPLAY-MESSAGE
-
+    
     PERFORM 600-GET-USER-INPUT
     IF NO-MORE-DATA EXIT PARAGRAPH END-IF
-
-    MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(INPUT-BUFFER))
+    
+    MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(INPUT-BUFFER)) 
       TO NORMALIZED-INPUT
-
+    
     EVALUATE TRUE
         WHEN NORMALIZED-INPUT = "1" OR NORMALIZED-INPUT = "ACCEPT"
             PERFORM 926-ACCEPT-CONNECTION-REQUEST
         WHEN NORMALIZED-INPUT = "2" OR NORMALIZED-INPUT = "REJECT"
             PERFORM 927-REJECT-CONNECTION-REQUEST
         WHEN OTHER
-            MOVE "Invalid choice. Request will remain pending."
+            MOVE "Invalid choice. Request will remain pending." 
               TO MESSAGE-BUFFER
             PERFORM 700-DISPLAY-MESSAGE
     END-EVALUATE.
@@ -637,23 +680,23 @@ END-IF.
     *> Add to permanent connections (both directions)
     IF PERMANENT-COUNT < MAX-PERMANENT-CONNECTIONS
         ADD 1 TO PERMANENT-COUNT
-        MOVE FUNCTION TRIM(CONN-SENDER(PROFILE-IDX))
+        MOVE FUNCTION TRIM(CONN-SENDER(PROFILE-IDX)) 
           TO PERM-USER1(PERMANENT-COUNT)
-        MOVE FUNCTION TRIM(CURRENT-USER)
+        MOVE FUNCTION TRIM(CURRENT-USER) 
           TO PERM-USER2(PERMANENT-COUNT)
-
+        
         *> Also add reverse connection
         IF PERMANENT-COUNT < MAX-PERMANENT-CONNECTIONS
             ADD 1 TO PERMANENT-COUNT
-            MOVE FUNCTION TRIM(CURRENT-USER)
+            MOVE FUNCTION TRIM(CURRENT-USER) 
               TO PERM-USER1(PERMANENT-COUNT)
-            MOVE FUNCTION TRIM(CONN-SENDER(PROFILE-IDX))
+            MOVE FUNCTION TRIM(CONN-SENDER(PROFILE-IDX)) 
               TO PERM-USER2(PERMANENT-COUNT)
         END-IF
-
+        
         *> Remove from pending requests
         PERFORM 928-REMOVE-PENDING-REQUEST
-
+        
         MOVE SPACES TO MESSAGE-BUFFER
         STRING "Connection request from " DELIMITED BY SIZE
                FUNCTION TRIM(CONN-SENDER(PROFILE-IDX)) DELIMITED BY SIZE
@@ -661,7 +704,7 @@ END-IF.
           INTO MESSAGE-BUFFER
         END-STRING
         PERFORM 700-DISPLAY-MESSAGE
-
+        
         *> Save changes
         PERFORM 970-SAVE-PERMANENT-CONNECTIONS
         PERFORM 960-SAVE-CONNECTIONS
@@ -692,15 +735,20 @@ END-IF.
     IF PROFILE-IDX < CONNECTION-COUNT
         PERFORM VARYING LOOP-INDEX FROM PROFILE-IDX BY 1
           UNTIL LOOP-INDEX >= CONNECTION-COUNT
-            MOVE CONN-SENDER(LOOP-INDEX + 1)
+            MOVE CONN-SENDER(LOOP-INDEX + 1) 
               TO CONN-SENDER(LOOP-INDEX)
-            MOVE CONN-RECEIVER(LOOP-INDEX + 1)
+            MOVE CONN-RECEIVER(LOOP-INDEX + 1) 
               TO CONN-RECEIVER(LOOP-INDEX)
         END-PERFORM
     END-IF
     SUBTRACT 1 FROM CONNECTION-COUNT.
+*> =====================
+*> NEW: Process individual connection request
+*> ====================
 
-
+*> =====================
+*> NEW: Accept connection request
+*> =====================
 910-SEND-CONNECTION-REQUESTS.
     *> Check for self-request
     IF FUNCTION TRIM(CURRENT-USER) = FUNCTION TRIM(P-USER(PROFILE-IDX))
@@ -1194,7 +1242,7 @@ END-IF.
 *> NEW: Persistence (load/save)
 *> =====================
 860-LOAD-PROFILES.
-    DISPLAY "DEBUG: 860 - About to OPEN USER-PROFILES for INPUT." *>debug
+    DISPLAY "DEBUG: 860 - About to OPEN USER-PROFILES for INPUT." *> DEBUG
     OPEN INPUT USER-PROFILES
 
     IF PROFILE-FILE-STATUS = "00"
@@ -1475,11 +1523,11 @@ END-IF.
 970-SAVE-PERMANENT-CONNECTIONS.
     OPEN OUTPUT PERMANENT-CONNECTIONS
     IF PERM-CONN-FILE-STATUS NOT = "00"
-        DISPLAY "Error saving permanent connections: "
+        DISPLAY "Error saving permanent connections: " 
                 PERM-CONN-FILE-STATUS
         EXIT PARAGRAPH
     END-IF
-
+    
     PERFORM VARYING LOOP-INDEX FROM 1 BY 1
         UNTIL LOOP-INDEX > PERMANENT-COUNT
         MOVE SPACES TO PERM-CONNECTION-REC
@@ -1490,7 +1538,7 @@ END-IF.
         END-STRING
         WRITE PERM-CONNECTION-REC
     END-PERFORM
-
+    
     CLOSE PERMANENT-CONNECTIONS.
 
 *> =====================
@@ -1499,18 +1547,18 @@ END-IF.
 975-LOAD-PERMANENT-CONNECTIONS.
     OPEN INPUT PERMANENT-CONNECTIONS
     IF PERM-CONN-FILE-STATUS = "35"
-
+        *> File doesn't exist yet, that's OK
         CLOSE PERMANENT-CONNECTIONS
         EXIT PARAGRAPH
     END-IF
-
+    
     IF PERM-CONN-FILE-STATUS NOT = "00"
-        DISPLAY "Error loading permanent connections: "
+        DISPLAY "Error loading permanent connections: " 
                 PERM-CONN-FILE-STATUS
         CLOSE PERMANENT-CONNECTIONS
         EXIT PARAGRAPH
     END-IF
-
+    
     MOVE 0 TO PERMANENT-COUNT
     PERFORM FOREVER
         READ PERMANENT-CONNECTIONS
@@ -1524,50 +1572,53 @@ END-IF.
             END-UNSTRING
         END-IF
     END-PERFORM
-
+    
     CLOSE PERMANENT-CONNECTIONS.
 
+*> =====================
+*> UPDATED: View My Network functionality to match sample format
+*> =====================
 *> =====================
 *> UPDATED: View My Network functionality to match sample format
 *> =====================
 580-VIEW-MY-NETWORK.
     MOVE "--- Your Network ---" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE
-
+    
     MOVE 0 TO LOOP-INDEX
     MOVE 0 TO SUBI
-
+    
     *> Count connections for current user
-    PERFORM VARYING LOOP-INDEX FROM 1 BY 1
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 
       UNTIL LOOP-INDEX > PERMANENT-COUNT
-        IF FUNCTION UPPER-CASE(FUNCTION TRIM(PERM-USER1(LOOP-INDEX))) =
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(PERM-USER1(LOOP-INDEX))) = 
            FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
             ADD 1 TO SUBI
         END-IF
     END-PERFORM
-
+    
     IF SUBI = 0
-        MOVE "You have no connections in your network yet."
+        MOVE "You have no connections in your network yet." 
           TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
         EXIT PARAGRAPH
     END-IF
-
+    
     *> Display all connections in the exact sample format
-    PERFORM VARYING LOOP-INDEX FROM 1 BY 1
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 
       UNTIL LOOP-INDEX > PERMANENT-COUNT
-        IF FUNCTION UPPER-CASE(FUNCTION TRIM(PERM-USER1(LOOP-INDEX))) =
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(PERM-USER1(LOOP-INDEX))) = 
            FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
             *> Find profile info for this connection
             MOVE 0 TO PROFILE-IDX
             PERFORM VARYING SUBI FROM 1 BY 1 UNTIL SUBI > PROFILE-COUNT
-                IF FUNCTION TRIM(PERM-USER2(LOOP-INDEX)) =
+                IF FUNCTION TRIM(PERM-USER2(LOOP-INDEX)) = 
                    FUNCTION TRIM(P-USER(SUBI))
                     MOVE SUBI TO PROFILE-IDX
                     EXIT PERFORM
                 END-IF
             END-PERFORM
-
+            
             *> Display in exact sample format: "Connected with: Username (University: X, Major: Y)"
             MOVE SPACES TO MESSAGE-BUFFER
             IF PROFILE-IDX > 0
@@ -1588,10 +1639,153 @@ END-IF.
                   INTO MESSAGE-BUFFER
                 END-STRING
             END-IF
-
+            
             PERFORM 700-DISPLAY-MESSAGE
         END-IF
     END-PERFORM
-
+    
     MOVE "--------------------" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE.
+    
+    930-JOB-SEARCH-MENU.
+    MOVE "--- Job Search/Internship Menu ---" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+
+    MOVE "1. Post a Job/Internship" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    MOVE "2. Browse Jobs/Internships" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    MOVE "3. Back to Main Menu" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    MOVE "Enter your choice:" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+
+    PERFORM 600-GET-USER-INPUT
+    IF NO-MORE-DATA EXIT PARAGRAPH END-IF
+    MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(INPUT-BUFFER)) TO NORMALIZED-INPUT
+
+    EVALUATE TRUE
+        WHEN NORMALIZED-INPUT = "1" OR NORMALIZED-INPUT = "POST"
+            PERFORM 931-POST-JOB
+        WHEN NORMALIZED-INPUT = "2" OR NORMALIZED-INPUT = "BROWSE"
+            PERFORM 932-BROWSE-JOBS
+        WHEN NORMALIZED-INPUT = "3" OR NORMALIZED-INPUT = "BACK"
+            EXIT PARAGRAPH
+        WHEN OTHER
+            MOVE "Invalid option." TO MESSAGE-BUFFER
+            PERFORM 700-DISPLAY-MESSAGE
+    END-EVALUATE.
+
+931-POST-JOB.
+    IF JOB-COUNT >= MAX-JOBS
+        MOVE "Job limit reached. Cannot post more." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        EXIT PARAGRAPH
+    END-IF
+
+    ADD 1 TO JOB-COUNT
+    MOVE JOB-COUNT TO J-ID(JOB-COUNT)
+    MOVE FUNCTION TRIM(CURRENT-USER) TO J-POSTER(JOB-COUNT)
+
+    MOVE "--- Post a New Job/Internship ---" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+
+    MOVE "Enter Job Title:" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    PERFORM 600-GET-USER-INPUT
+    MOVE FUNCTION TRIM(INPUT-BUFFER) TO J-TITLE(JOB-COUNT)
+
+    MOVE "Enter Description (max 200 chars):" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    PERFORM 600-GET-USER-INPUT
+    MOVE FUNCTION TRIM(INPUT-BUFFER) TO J-DESC(JOB-COUNT)
+
+    MOVE "Enter Employer Name:" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    PERFORM 600-GET-USER-INPUT
+    MOVE FUNCTION TRIM(INPUT-BUFFER) TO J-EMPLOYER(JOB-COUNT)
+
+    MOVE "Enter Location:" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    PERFORM 600-GET-USER-INPUT
+    MOVE FUNCTION TRIM(INPUT-BUFFER) TO J-LOCATION(JOB-COUNT)
+
+    MOVE "Enter Salary (optional, enter 'NONE' to skip):" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+    PERFORM 600-GET-USER-INPUT
+    IF FUNCTION UPPER-CASE(FUNCTION TRIM(INPUT-BUFFER)) = "NONE"
+        MOVE SPACES TO J-SALARY(JOB-COUNT)
+    ELSE
+        MOVE FUNCTION TRIM(INPUT-BUFFER) TO J-SALARY(JOB-COUNT)
+    END-IF
+
+    PERFORM 933-SAVE-JOBS
+
+    MOVE "Job posted successfully!" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+
+    MOVE "----------------------------------" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+
+    *> Return to the Job Menu so user can pick again
+    PERFORM 930-JOB-SEARCH-MENU.
+
+
+*> =====================
+*> 932 - Browse Jobs/Internships (Under Construction)
+*> =====================
+932-BROWSE-JOBS.
+    MOVE "Browse Jobs/Internships is under construction." TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+
+    *> Re-show the Job Search/Internship menu
+    PERFORM 930-JOB-SEARCH-MENU.
+
+
+933-SAVE-JOBS.
+    OPEN OUTPUT USER-JOBS
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 UNTIL LOOP-INDEX > JOB-COUNT
+        MOVE SPACES TO JOB-REC
+        STRING J-ID(LOOP-INDEX) DELIMITED BY SIZE
+               "|" DELIMITED BY SIZE
+               FUNCTION TRIM(J-TITLE(LOOP-INDEX)) DELIMITED BY SIZE
+               "|" DELIMITED BY SIZE
+               FUNCTION TRIM(J-DESC(LOOP-INDEX)) DELIMITED BY SIZE
+               "|" DELIMITED BY SIZE
+               FUNCTION TRIM(J-EMPLOYER(LOOP-INDEX)) DELIMITED BY SIZE
+               "|" DELIMITED BY SIZE
+               FUNCTION TRIM(J-LOCATION(LOOP-INDEX)) DELIMITED BY SIZE
+               "|" DELIMITED BY SIZE
+               FUNCTION TRIM(J-SALARY(LOOP-INDEX)) DELIMITED BY SIZE
+               "|" DELIMITED BY SIZE
+               FUNCTION TRIM(J-POSTER(LOOP-INDEX)) DELIMITED BY SIZE
+          INTO JOB-REC
+        END-STRING
+        WRITE JOB-REC
+    END-PERFORM
+    CLOSE USER-JOBS.
+
+934-LOAD-JOBS.
+    OPEN INPUT USER-JOBS
+    IF JOB-FILE-STATUS = "35"
+        MOVE 0 TO JOB-COUNT
+        CLOSE USER-JOBS
+        EXIT PARAGRAPH
+    END-IF
+    MOVE 0 TO JOB-COUNT
+    PERFORM FOREVER
+        READ USER-JOBS AT END EXIT PERFORM END-READ
+        IF FUNCTION TRIM(JOB-REC) NOT = SPACES
+            ADD 1 TO JOB-COUNT
+            UNSTRING JOB-REC DELIMITED BY "|"
+                INTO J-ID(JOB-COUNT)
+                     J-TITLE(JOB-COUNT)
+                     J-DESC(JOB-COUNT)
+                     J-EMPLOYER(JOB-COUNT)
+                     J-LOCATION(JOB-COUNT)
+                     J-SALARY(JOB-COUNT)
+                     J-POSTER(JOB-COUNT)
+            END-UNSTRING
+        END-IF
+    END-PERFORM
+    CLOSE USER-JOBS.
