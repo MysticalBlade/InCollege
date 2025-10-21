@@ -1,15 +1,10 @@
-#log in as A and B to both send request to Alice
 1
-UserB
-IAmUserB1!
-2
-Alice Gomes
-Y
-
------------------------------------------------------------------
-#log in as Alice and see if she can see and accept multiple pending requests
-1
-AliceGomes
+TestUser
 Password1!
-4
-
+1
+1
+Software Intern
+Developer software as an Intern
+USF
+Tampa
+$50 K
