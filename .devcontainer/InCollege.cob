@@ -1719,6 +1719,60 @@ END-IF.
         MOVE FUNCTION TRIM(INPUT-BUFFER) TO J-SALARY(JOB-COUNT)
     END-IF
 
+    *> =====================
+    *> VALIDATION: Check required fields and description length
+    *> =====================
+    IF FUNCTION TRIM(J-TITLE(JOB-COUNT)) = SPACES
+        MOVE "Error: Job Title is required." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        SUBTRACT 1 FROM JOB-COUNT
+        MOVE "----------------------------------" TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        PERFORM 930-JOB-SEARCH-MENU
+        EXIT PARAGRAPH
+    END-IF
+
+    IF FUNCTION TRIM(J-DESC(JOB-COUNT)) = SPACES
+        MOVE "Error: Description is required." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        SUBTRACT 1 FROM JOB-COUNT
+        MOVE "----------------------------------" TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        PERFORM 930-JOB-SEARCH-MENU
+        EXIT PARAGRAPH
+    END-IF
+
+    IF FUNCTION LENGTH(FUNCTION TRIM(J-DESC(JOB-COUNT))) > 200
+        MOVE "Error: Description exceeds 200 characters." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        SUBTRACT 1 FROM JOB-COUNT
+        MOVE "----------------------------------" TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        PERFORM 930-JOB-SEARCH-MENU
+        EXIT PARAGRAPH
+    END-IF
+
+    IF FUNCTION TRIM(J-EMPLOYER(JOB-COUNT)) = SPACES
+        MOVE "Error: Employer Name is required." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        SUBTRACT 1 FROM JOB-COUNT
+        MOVE "----------------------------------" TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        PERFORM 930-JOB-SEARCH-MENU
+        EXIT PARAGRAPH
+    END-IF
+
+    IF FUNCTION TRIM(J-LOCATION(JOB-COUNT)) = SPACES
+        MOVE "Error: Location is required." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        SUBTRACT 1 FROM JOB-COUNT
+        MOVE "----------------------------------" TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        PERFORM 930-JOB-SEARCH-MENU
+        EXIT PARAGRAPH
+    END-IF
+
+    *> All validations passed, save the job
     PERFORM 933-SAVE-JOBS
 
     MOVE "Job posted successfully!" TO MESSAGE-BUFFER
