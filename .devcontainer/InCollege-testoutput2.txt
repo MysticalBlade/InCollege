@@ -1,4 +1,3 @@
-#Mix case accepting A but not B
 Welcome to InCollege!
 Log In
 Create New Account
@@ -7,24 +6,34 @@ Please enter your username:
 Please enter your password:
 You have successfully logged in.
 Welcome, AliceGomes!
-1. View My Profile
-2. Search for User
-3. Learn a New Skill
+1. Search for a job
+2. Find someone you know
+3. Learn a new skill
 4. View My Pending Connection Requests
 5. View My Network
 Enter your choice:
---- Pending Connection Requests ---
-Request from: UserA
-1. Accept
-2. Reject
-Enter your choice for UserA:
-Connection request from UserB accepted!
---------------------
-1. View My Profile
-2. Search for User
-3. Learn a New Skill
-4. View My Pending Connection Requests
-5. View My Network
+--- Job Search/Internship Menu ---
+1. Post a Job/Internship
+2. Browse Jobs/Internships
+3. Back to Main Menu
 Enter your choice:
-Enter the full name of the person you are looking for:
+--- Post a New Job/Internship ---
+Enter Job Title:
+Enter Description (max 200 chars):
+Enter Employer Name:
+Enter Location:
+Enter Salary (optional, enter 'NONE' to skip):
+Error: Location is required.
+----------------------------------
+--- Job Search/Internship Menu ---
+1. Post a Job/Internship
+2. Browse Jobs/Internships
+3. Back to Main Menu
+Enter your choice:
+Browse Jobs/Internships is under construction.
+--- Job Search/Internship Menu ---
+1. Post a Job/Internship
+2. Browse Jobs/Internships
+3. Back to Main Menu
+Enter your choice:
 --- END_OF_PROGRAM_EXECUTION ---

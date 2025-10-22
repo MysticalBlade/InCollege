@@ -1,6 +1,11 @@
 1
 AliceGomes
 Password1!
-4
 1
+1
+lead Developer
+head of software management
+john smith
+
+NONE
 2

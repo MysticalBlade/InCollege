@@ -3,8 +3,9 @@ TestUser
 Password1!
 1
 1
-Software Intern
-Developer software as an Intern
+Software Intern at Reliaquest
+Devlopement of software as an intern
 USF
-Tampa
-$50 K
+remote
+$40 K
+2

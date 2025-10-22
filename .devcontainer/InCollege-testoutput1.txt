@@ -1,4 +1,3 @@
-#able to see multiple pending request and accept or reject both
 Welcome to InCollege!
 Log In
 Create New Account
@@ -6,22 +5,35 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in.
-Welcome, AliceGomes!
-1. View My Profile
-2. Search for User
-3. Learn a New Skill
+Welcome, TestUser!
+1. Search for a job
+2. Find someone you know
+3. Learn a new skill
 4. View My Pending Connection Requests
 5. View My Network
 Enter your choice:
---- Pending Connection Requests ---
-Request from: UserA
-1. Accept
-2. Reject
-Enter your choice for UserA:
-Invalid choice. Request will remain pending.
-Request from: UserB
-1. Accept
-2. Reject
-Enter your choice for UserB:
---------------------
+--- Job Search/Internship Menu ---
+1. Post a Job/Internship
+2. Browse Jobs/Internships
+3. Back to Main Menu
+Enter your choice:
+--- Post a New Job/Internship ---
+Enter Job Title:
+Enter Description (max 200 chars):
+Enter Employer Name:
+Enter Location:
+Enter Salary (optional, enter 'NONE' to skip):
+Job posted successfully!
+----------------------------------
+--- Job Search/Internship Menu ---
+1. Post a Job/Internship
+2. Browse Jobs/Internships
+3. Back to Main Menu
+Enter your choice:
+Browse Jobs/Internships is under construction.
+--- Job Search/Internship Menu ---
+1. Post a Job/Internship
+2. Browse Jobs/Internships
+3. Back to Main Menu
+Enter your choice:
 --- END_OF_PROGRAM_EXECUTION ---
