@@ -2,11 +2,4 @@
 TestUser
 Password1!
 1
-1
-Software Intern
-Develop and maintain web applications using modern frameworks and technologies. Work with senior developers on real-world projects.
-TechCorp Inc
-Remote
-$25/hour
-2
 3
