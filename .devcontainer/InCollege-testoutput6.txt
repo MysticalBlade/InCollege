@@ -18,9 +18,13 @@ Enter your choice:
 3. View My Applications
 4. Back to Main Menu
 Enter your choice:
---- Available Job Listings ---
-(No jobs posted yet.)
------------------------------
+--- Your Job Applications ---
+Application Summary for TestUser
+------------------------------
+You have not applied to any jobs yet.
+------------------------------
+Total Applications: 0
+------------------------------
 1. Search for a job
 2. Find someone you know
 3. Learn a new skill

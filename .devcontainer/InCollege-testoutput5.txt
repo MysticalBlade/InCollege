@@ -34,4 +34,11 @@ Salary: $25/hour
 1. Apply for this Job
 2. Back to Job List
 Enter your choice:
+You have already applied to this job.
+--- Available Job Listings ---
+01. Software Intern at TechCorp (New York, NY)
+02. Data Analyst at DataSolutions (Remote)
+03. Marketing Specialist at BrandInc (Chicago, IL)
+-----------------------------
+Enter job number to view details, or 0 to go back:
 --- END_OF_PROGRAM_EXECUTION ---

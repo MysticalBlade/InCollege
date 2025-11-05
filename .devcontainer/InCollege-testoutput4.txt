@@ -19,12 +19,16 @@ Enter your choice:
 4. Back to Main Menu
 Enter your choice:
 --- Available Job Listings ---
-(No jobs posted yet.)
+01. Software Intern at TechCorp (New York, NY)
+02. Data Analyst at DataSolutions (Remote)
+03. Marketing Specialist at BrandInc (Chicago, IL)
 -----------------------------
-1. Search for a job
-2. Find someone you know
-3. Learn a new skill
-4. View My Pending Connection Requests
-5. View My Network
-Enter your choice:
+Enter job number to view details, or 0 to go back:
+Invalid job number.
+--- Available Job Listings ---
+01. Software Intern at TechCorp (New York, NY)
+02. Data Analyst at DataSolutions (Remote)
+03. Marketing Specialist at BrandInc (Chicago, IL)
+-----------------------------
+Enter job number to view details, or 0 to go back:
 --- END_OF_PROGRAM_EXECUTION ---
