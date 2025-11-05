@@ -5,7 +5,7 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in.
-Welcome, TestUser!
+Welcome, AliceGomes!
 1. Search for a job
 2. Find someone you know
 3. Learn a new skill
@@ -18,7 +18,10 @@ Enter your choice:
 2. View My Messages
 3. Back to Main Menu
 Enter your choice:
-View My Messages is under construction.
+Enter recipient's username (must be a connection):
+Enter your message (max 200 chars):
+Message sent to TestUser successfully!
+---------------------
 --- Messages Menu ---
 1. Send a New Message
 2. View My Messages
