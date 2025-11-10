@@ -243,6 +243,7 @@ WORKING-STORAGE SECTION.
 01  RECIPIENT-USERNAME          PIC X(20).
 01  MESSAGE-CONTENT-INPUT       PIC X(200).
 01  IS-CONNECTED-FLAG           PIC X VALUE 'N'.
+01  MESSAGES-FOUND              PIC 9(3) VALUE 0.
 
 PROCEDURE DIVISION.
 000-MAIN.
@@ -656,27 +657,27 @@ END-IF.
     MOVE 0 TO SUBI
     MOVE "--- Pending Connection Requests ---" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE
-    
+
     *> First, count how many pending requests exist
     MOVE 0 TO SUBI
-    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1
       UNTIL LOOP-INDEX > CONNECTION-COUNT
-        IF FUNCTION UPPER-CASE(FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX))) = 
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX))) =
            FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
             ADD 1 TO SUBI
         END-IF
     END-PERFORM
-    
+
     IF SUBI = 0
         MOVE "You have no pending connection requests." TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
         EXIT PARAGRAPH
     END-IF
-    
+
     *> Process each pending request
-    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1
       UNTIL LOOP-INDEX > CONNECTION-COUNT
-        IF FUNCTION UPPER-CASE(FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX))) = 
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(CONN-RECEIVER(LOOP-INDEX))) =
            FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
             MOVE SPACES TO MESSAGE-BUFFER
             STRING "Request from: " DELIMITED BY SIZE
@@ -684,13 +685,13 @@ END-IF.
               INTO MESSAGE-BUFFER
             END-STRING
             PERFORM 700-DISPLAY-MESSAGE
-            
+
             *> Store the request index for processing
             MOVE LOOP-INDEX TO PROFILE-IDX
             PERFORM 925-PROCESS-SINGLE-REQUEST
         END-IF
     END-PERFORM
-    
+
     MOVE "--------------------" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE.
 
@@ -709,20 +710,20 @@ END-IF.
       INTO MESSAGE-BUFFER
     END-STRING
     PERFORM 700-DISPLAY-MESSAGE
-    
+
     PERFORM 600-GET-USER-INPUT
     IF NO-MORE-DATA EXIT PARAGRAPH END-IF
-    
-    MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(INPUT-BUFFER)) 
+
+    MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(INPUT-BUFFER))
       TO NORMALIZED-INPUT
-    
+
     EVALUATE TRUE
         WHEN NORMALIZED-INPUT = "1" OR NORMALIZED-INPUT = "ACCEPT"
             PERFORM 926-ACCEPT-CONNECTION-REQUEST
         WHEN NORMALIZED-INPUT = "2" OR NORMALIZED-INPUT = "REJECT"
             PERFORM 927-REJECT-CONNECTION-REQUEST
         WHEN OTHER
-            MOVE "Invalid choice. Request will remain pending." 
+            MOVE "Invalid choice. Request will remain pending."
               TO MESSAGE-BUFFER
             PERFORM 700-DISPLAY-MESSAGE
     END-EVALUATE.
@@ -734,23 +735,23 @@ END-IF.
     *> Add to permanent connections (both directions)
     IF PERMANENT-COUNT < MAX-PERMANENT-CONNECTIONS
         ADD 1 TO PERMANENT-COUNT
-        MOVE FUNCTION TRIM(CONN-SENDER(PROFILE-IDX)) 
+        MOVE FUNCTION TRIM(CONN-SENDER(PROFILE-IDX))
           TO PERM-USER1(PERMANENT-COUNT)
-        MOVE FUNCTION TRIM(CURRENT-USER) 
+        MOVE FUNCTION TRIM(CURRENT-USER)
           TO PERM-USER2(PERMANENT-COUNT)
-        
+
         *> Also add reverse connection
         IF PERMANENT-COUNT < MAX-PERMANENT-CONNECTIONS
             ADD 1 TO PERMANENT-COUNT
-            MOVE FUNCTION TRIM(CURRENT-USER) 
+            MOVE FUNCTION TRIM(CURRENT-USER)
               TO PERM-USER1(PERMANENT-COUNT)
-            MOVE FUNCTION TRIM(CONN-SENDER(PROFILE-IDX)) 
+            MOVE FUNCTION TRIM(CONN-SENDER(PROFILE-IDX))
               TO PERM-USER2(PERMANENT-COUNT)
         END-IF
-        
+
         *> Remove from pending requests
         PERFORM 928-REMOVE-PENDING-REQUEST
-        
+
         MOVE SPACES TO MESSAGE-BUFFER
         STRING "Connection request from " DELIMITED BY SIZE
                FUNCTION TRIM(CONN-SENDER(PROFILE-IDX)) DELIMITED BY SIZE
@@ -758,7 +759,7 @@ END-IF.
           INTO MESSAGE-BUFFER
         END-STRING
         PERFORM 700-DISPLAY-MESSAGE
-        
+
         *> Save changes
         PERFORM 970-SAVE-PERMANENT-CONNECTIONS
         PERFORM 960-SAVE-CONNECTIONS
@@ -789,9 +790,9 @@ END-IF.
     IF PROFILE-IDX < CONNECTION-COUNT
         PERFORM VARYING LOOP-INDEX FROM PROFILE-IDX BY 1
           UNTIL LOOP-INDEX >= CONNECTION-COUNT
-            MOVE CONN-SENDER(LOOP-INDEX + 1) 
+            MOVE CONN-SENDER(LOOP-INDEX + 1)
               TO CONN-SENDER(LOOP-INDEX)
-            MOVE CONN-RECEIVER(LOOP-INDEX + 1) 
+            MOVE CONN-RECEIVER(LOOP-INDEX + 1)
               TO CONN-RECEIVER(LOOP-INDEX)
         END-PERFORM
     END-IF
@@ -1576,11 +1577,11 @@ END-IF.
 970-SAVE-PERMANENT-CONNECTIONS.
     OPEN OUTPUT PERMANENT-CONNECTIONS
     IF PERM-CONN-FILE-STATUS NOT = "00"
-        DISPLAY "Error saving permanent connections: " 
+        DISPLAY "Error saving permanent connections: "
                 PERM-CONN-FILE-STATUS
         EXIT PARAGRAPH
     END-IF
-    
+
     PERFORM VARYING LOOP-INDEX FROM 1 BY 1
         UNTIL LOOP-INDEX > PERMANENT-COUNT
         MOVE SPACES TO PERM-CONNECTION-REC
@@ -1591,7 +1592,7 @@ END-IF.
         END-STRING
         WRITE PERM-CONNECTION-REC
     END-PERFORM
-    
+
     CLOSE PERMANENT-CONNECTIONS.
 
 *> =====================
@@ -1604,14 +1605,14 @@ END-IF.
         CLOSE PERMANENT-CONNECTIONS
         EXIT PARAGRAPH
     END-IF
-    
+
     IF PERM-CONN-FILE-STATUS NOT = "00"
-        DISPLAY "Error loading permanent connections: " 
+        DISPLAY "Error loading permanent connections: "
                 PERM-CONN-FILE-STATUS
         CLOSE PERMANENT-CONNECTIONS
         EXIT PARAGRAPH
     END-IF
-    
+
     MOVE 0 TO PERMANENT-COUNT
     PERFORM FOREVER
         READ PERMANENT-CONNECTIONS
@@ -1625,7 +1626,7 @@ END-IF.
             END-UNSTRING
         END-IF
     END-PERFORM
-    
+
     CLOSE PERMANENT-CONNECTIONS.
 
 *> =====================
@@ -1637,41 +1638,41 @@ END-IF.
 580-VIEW-MY-NETWORK.
     MOVE "--- Your Network ---" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE
-    
+
     MOVE 0 TO LOOP-INDEX
     MOVE 0 TO SUBI
-    
+
     *> Count connections for current user
-    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1
       UNTIL LOOP-INDEX > PERMANENT-COUNT
-        IF FUNCTION UPPER-CASE(FUNCTION TRIM(PERM-USER1(LOOP-INDEX))) = 
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(PERM-USER1(LOOP-INDEX))) =
            FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
             ADD 1 TO SUBI
         END-IF
     END-PERFORM
-    
+
     IF SUBI = 0
-        MOVE "You have no connections in your network yet." 
+        MOVE "You have no connections in your network yet."
           TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
         EXIT PARAGRAPH
     END-IF
-    
+
     *> Display all connections in the exact sample format
-    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1
       UNTIL LOOP-INDEX > PERMANENT-COUNT
-        IF FUNCTION UPPER-CASE(FUNCTION TRIM(PERM-USER1(LOOP-INDEX))) = 
+        IF FUNCTION UPPER-CASE(FUNCTION TRIM(PERM-USER1(LOOP-INDEX))) =
            FUNCTION UPPER-CASE(FUNCTION TRIM(CURRENT-USER))
             *> Find profile info for this connection
             MOVE 0 TO PROFILE-IDX
             PERFORM VARYING SUBI FROM 1 BY 1 UNTIL SUBI > PROFILE-COUNT
-                IF FUNCTION TRIM(PERM-USER2(LOOP-INDEX)) = 
+                IF FUNCTION TRIM(PERM-USER2(LOOP-INDEX)) =
                    FUNCTION TRIM(P-USER(SUBI))
                     MOVE SUBI TO PROFILE-IDX
                     EXIT PERFORM
                 END-IF
             END-PERFORM
-            
+
             *> Display in exact sample format: "Connected with: Username (University: X, Major: Y)"
             MOVE SPACES TO MESSAGE-BUFFER
             IF PROFILE-IDX > 0
@@ -1692,14 +1693,14 @@ END-IF.
                   INTO MESSAGE-BUFFER
                 END-STRING
             END-IF
-            
+
             PERFORM 700-DISPLAY-MESSAGE
         END-IF
     END-PERFORM
-    
+
     MOVE "--------------------" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE.
-    
+
 *> =====================
 *> JOB MENU (Week 7 additions integrated)
 *> =====================
@@ -2211,29 +2212,28 @@ END-IF.
         PERFORM 700-DISPLAY-MESSAGE
         MOVE "Enter your choice:" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
-        
+
         PERFORM 600-GET-USER-INPUT
         IF NO-MORE-DATA
             EXIT PARAGRAPH
         END-IF
         MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(INPUT-BUFFER))
           TO NORMALIZED-INPUT
-        
+
         EVALUATE TRUE
             WHEN NORMALIZED-INPUT = "1"
               OR NORMALIZED-INPUT = "SEND A NEW MESSAGE"
                 PERFORM 586-SEND-NEW-MESSAGE
-            
+
             WHEN NORMALIZED-INPUT = "2"
               OR NORMALIZED-INPUT = "VIEW MY MESSAGES"
-                MOVE "View My Messages is under construction." TO MESSAGE-BUFFER
-                PERFORM 700-DISPLAY-MESSAGE
-            
+                PERFORM 587-VIEW-MY-MESSAGES
+
             WHEN NORMALIZED-INPUT = "3"
               OR NORMALIZED-INPUT = "BACK TO MAIN MENU"
               OR NORMALIZED-INPUT = "BACK"
                 EXIT PARAGRAPH
-            
+
             WHEN OTHER
                 CONTINUE
         END-EVALUATE
@@ -2248,20 +2248,20 @@ END-IF.
     PERFORM 600-GET-USER-INPUT
     IF NO-MORE-DATA EXIT PARAGRAPH END-IF
     MOVE FUNCTION TRIM(INPUT-BUFFER) TO RECIPIENT-USERNAME
-    
+
     *> Validate recipient exists and is a connection
     PERFORM 587-VALIDATE-RECIPIENT
     IF IS-CONNECTED-FLAG NOT = 'Y'
         EXIT PARAGRAPH
     END-IF
-    
+
     *> Get message content
     MOVE "Enter your message (max 200 chars):" TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE
     PERFORM 600-GET-USER-INPUT
     IF NO-MORE-DATA EXIT PARAGRAPH END-IF
     MOVE FUNCTION TRIM(INPUT-BUFFER) TO MESSAGE-CONTENT-INPUT
-    
+
     *> Save the message
     IF MESSAGE-COUNT < MAX-MESSAGES
         ADD 1 TO MESSAGE-COUNT
@@ -2269,10 +2269,10 @@ END-IF.
         MOVE FUNCTION TRIM(RECIPIENT-USERNAME) TO MSG-RECIPIENT(MESSAGE-COUNT)
         MOVE FUNCTION TRIM(MESSAGE-CONTENT-INPUT) TO MSG-CONTENT(MESSAGE-COUNT)
         MOVE SPACES TO MSG-TIMESTAMP(MESSAGE-COUNT)
-        
+
         *> Save to file
         PERFORM 595-SAVE-MESSAGES
-        
+
         MOVE SPACES TO MESSAGE-BUFFER
         STRING "Message sent to " DELIMITED BY SIZE
                FUNCTION TRIM(RECIPIENT-USERNAME) DELIMITED BY SIZE
@@ -2288,11 +2288,64 @@ END-IF.
     END-IF.
 
 *> =====================
+*> NEW: View My Messages (Week 9)
+*> =====================
+587-VIEW-MY-MESSAGES.
+    MOVE 0 TO LOOP-INDEX
+    MOVE 0 TO MESSAGES-FOUND
+    MOVE "--- My Messages ---" TO MESSAGE-BUFFER
+    PERFORM 700-DISPLAY-MESSAGE
+
+    *> Count messages for current user
+    PERFORM VARYING LOOP-INDEX FROM 1 BY 1 UNTIL LOOP-INDEX > MESSAGE-COUNT
+        IF FUNCTION TRIM(MSG-RECIPIENT(LOOP-INDEX)) = FUNCTION TRIM(CURRENT-USER)
+            ADD 1 TO MESSAGES-FOUND
+        END-IF
+    END-PERFORM
+
+    *> Display messages if any found
+    IF MESSAGES-FOUND > 0
+        PERFORM VARYING LOOP-INDEX FROM 1 BY 1 UNTIL LOOP-INDEX > MESSAGE-COUNT
+            IF FUNCTION TRIM(MSG-RECIPIENT(LOOP-INDEX)) = FUNCTION TRIM(CURRENT-USER)
+                MOVE SPACES TO MESSAGE-BUFFER
+                STRING "From: " DELIMITED BY SIZE
+                       FUNCTION TRIM(MSG-SENDER(LOOP-INDEX)) DELIMITED BY SIZE
+                  INTO MESSAGE-BUFFER
+                END-STRING
+                PERFORM 700-DISPLAY-MESSAGE
+
+                MOVE SPACES TO MESSAGE-BUFFER
+                STRING "Message: " DELIMITED BY SIZE
+                       FUNCTION TRIM(MSG-CONTENT(LOOP-INDEX)) DELIMITED BY SIZE
+                  INTO MESSAGE-BUFFER
+                END-STRING
+                PERFORM 700-DISPLAY-MESSAGE
+
+                *> Display timestamp if available
+                IF FUNCTION TRIM(MSG-TIMESTAMP(LOOP-INDEX)) NOT = SPACES
+                    MOVE SPACES TO MESSAGE-BUFFER
+                    STRING "Time: " DELIMITED BY SIZE
+                           FUNCTION TRIM(MSG-TIMESTAMP(LOOP-INDEX)) DELIMITED BY SIZE
+                      INTO MESSAGE-BUFFER
+                    END-STRING
+                    PERFORM 700-DISPLAY-MESSAGE
+                END-IF
+
+                MOVE "---------------------" TO MESSAGE-BUFFER
+                PERFORM 700-DISPLAY-MESSAGE
+            END-IF
+        END-PERFORM
+    ELSE
+        MOVE "You have no messages at this time." TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+    END-IF.
+
+*> =====================
 *> NEW: Validate Recipient is Connected (Week 8)
 *> =====================
 587-VALIDATE-RECIPIENT.
     MOVE 'N' TO IS-CONNECTED-FLAG
-    
+
     *> Check if recipient exists in accounts
     MOVE 0 TO LOOP-INDEX
     PERFORM VARYING LOOP-INDEX FROM 1 BY 1 UNTIL LOOP-INDEX > ACCOUNT-COUNT
@@ -2302,13 +2355,13 @@ END-IF.
             EXIT PERFORM
         END-IF
     END-PERFORM
-    
+
     IF IS-CONNECTED-FLAG = 'N'
         MOVE "You can only message users you are connected with." TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
         EXIT PARAGRAPH
     END-IF
-    
+
     *> Check if they are connected
     MOVE 'N' TO IS-CONNECTED-FLAG
     PERFORM VARYING LOOP-INDEX FROM 1 BY 1 UNTIL LOOP-INDEX > PERMANENT-COUNT
@@ -2325,7 +2378,7 @@ END-IF.
             EXIT PERFORM
         END-IF
     END-PERFORM
-    
+
     IF IS-CONNECTED-FLAG = 'N'
         MOVE "You can only message users you are connected with." TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
@@ -2341,13 +2394,13 @@ END-IF.
         CLOSE USER-MESSAGES
         EXIT PARAGRAPH
     END-IF
-    
+
     IF MESSAGE-FILE-STATUS NOT = "00"
         DISPLAY "Error loading messages: " MESSAGE-FILE-STATUS
         CLOSE USER-MESSAGES
         EXIT PARAGRAPH
     END-IF
-    
+
     MOVE 0 TO MESSAGE-COUNT
     PERFORM FOREVER
         READ USER-MESSAGES
@@ -2365,7 +2418,7 @@ END-IF.
             END-IF
         END-IF
     END-PERFORM
-    
+
     CLOSE USER-MESSAGES.
 
 *> =====================
