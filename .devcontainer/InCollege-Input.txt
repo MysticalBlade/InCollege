@@ -1,7 +1,5 @@
 1
-AliceGomes
+TestUser
 Password1!
 6
-1
-TestUser
-Hello TestUser, this is a test message from AliceGomes!
+2

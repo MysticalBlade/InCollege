@@ -5,7 +5,7 @@ Enter your choice:
 Please enter your username:
 Please enter your password:
 You have successfully logged in.
-Welcome, AliceGomes!
+Welcome, TestUser!
 1. Search for a job
 2. Find someone you know
 3. Learn a new skill
@@ -18,9 +18,18 @@ Enter your choice:
 2. View My Messages
 3. Back to Main Menu
 Enter your choice:
-Enter recipient's username (must be a connection):
-Enter your message (max 200 chars):
-Message sent to TestUser successfully!
+--- My Messages ---
+From: AliceGomes
+Message: Hello TestUser, this is a test message from AliceGomes!
+---------------------
+From: AliceGomes
+Message: This is a very long message to test the 200 character limit. Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad m
+---------------------
+From: AliceGomes
+Message: Hello TestUser, this is a test message from AliceGomes!
+---------------------
+From: AliceGomes
+Message: Hello TestUser, this is a test message from AliceGomes!
 ---------------------
 --- Messages Menu ---
 1. Send a New Message
