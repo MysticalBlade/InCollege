@@ -18,7 +18,22 @@ Enter your choice:
 2. View My Messages
 3. Back to Main Menu
 Enter your choice:
-View My Messages is under construction.
+--- My Messages ---
+From: AliceGomes
+Message: Hello TestUser, this is a test message from AliceGomes!
+---------------------
+From: AliceGomes
+Message: This is a very long message to test the 200 character limit. Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad m
+---------------------
+From: AliceGomes
+Message: Hello TestUser, this is a test message from AliceGomes!
+---------------------
+From: AliceGomes
+Message: Hello TestUser, this is a test message from AliceGomes!
+---------------------
+From: AliceGomes
+Message: Hello TestUser, this is a test message from AliceGomes!
+---------------------
 --- Messages Menu ---
 1. Send a New Message
 2. View My Messages

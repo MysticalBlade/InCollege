@@ -31,6 +31,9 @@ Message: Hello TestUser, this is a test message from AliceGomes!
 From: AliceGomes
 Message: Hello TestUser, this is a test message from AliceGomes!
 ---------------------
+From: AliceGomes
+Message: Hello TestUser, this is a test message from AliceGomes!
+---------------------
 --- Messages Menu ---
 1. Send a New Message
 2. View My Messages
