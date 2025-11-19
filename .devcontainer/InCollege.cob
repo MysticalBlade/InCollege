@@ -426,25 +426,26 @@ PROCEDURE DIVISION.
     MOVE INPUT-PASSWORD TO ACCT-PASS(ACCOUNT-COUNT)
     MOVE "Account created successfully." TO MESSAGE-BUFFER
     PERFORM 700-DISPLAY-MESSAGE.
-*> =====================
-*> UPDATED: Post-login menu to include Profile features
-*> =====================
-*> =====================
-*> UPDATED: Post-login menu to include Network view
-*> =====================
+
 500-POST-LOGIN-OPERATIONS.
     PERFORM UNTIL NO-MORE-DATA
-        MOVE "1. Search for a job" TO MESSAGE-BUFFER
+        MOVE "1. Create/Edit My Profile" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
-        MOVE "2. Find someone you know" TO MESSAGE-BUFFER
+        MOVE "2. View My Profile" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
-        MOVE "3. Learn a new skill" TO MESSAGE-BUFFER
+        MOVE "3. Search for User" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
-        MOVE "4. View My Pending Connection Requests" TO MESSAGE-BUFFER
+        MOVE "4. Learn a New Skill" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
-        MOVE "5. View My Network" TO MESSAGE-BUFFER
+        MOVE "5. View My Pending Connection Requests" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
-        MOVE "6. Messages" TO MESSAGE-BUFFER
+        MOVE "6. View My Network" TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        MOVE "7. Job Search/Internship" TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        MOVE "8. Messages" TO MESSAGE-BUFFER
+        PERFORM 700-DISPLAY-MESSAGE
+        MOVE "9. Exit" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
         MOVE "Enter your choice:" TO MESSAGE-BUFFER
         PERFORM 700-DISPLAY-MESSAGE
@@ -458,32 +459,47 @@ PROCEDURE DIVISION.
 
         EVALUATE TRUE
            WHEN NORMALIZED-INPUT = "1"
-             OR NORMALIZED-INPUT = "SEARCH FOR A JOB"
-             OR NORMALIZED-INPUT = "JOB"
-               PERFORM 930-JOB-SEARCH-MENU
+             OR NORMALIZED-INPUT = "CREATE/EDIT MY PROFILE"
+             OR NORMALIZED-INPUT = "CREATE"
+             OR NORMALIZED-INPUT = "EDIT"
+               PERFORM 560-CREATE-OR-EDIT-PROFILE
 
            WHEN NORMALIZED-INPUT = "2"
+             OR NORMALIZED-INPUT = "VIEW MY PROFILE"
+               PERFORM 565-VIEW-MY-PROFILE
+
+           WHEN NORMALIZED-INPUT = "3"
              OR NORMALIZED-INPUT = "SEARCH FOR USER"
                PERFORM 570-SEARCH-AND-DISPLAY-PROFILE
 
-           WHEN NORMALIZED-INPUT = "3"
+           WHEN NORMALIZED-INPUT = "4"
              OR NORMALIZED-INPUT = "LEARN A NEW SKILL"
                PERFORM 550-SKILLS-MODULE
 
-           WHEN NORMALIZED-INPUT = "4"
+           WHEN NORMALIZED-INPUT = "5"
              OR NORMALIZED-INPUT = "VIEW MY PENDING CONNECTION REQUESTS"
                PERFORM 920-VIEW-PENDING-REQUESTS
 
-           WHEN NORMALIZED-INPUT = "5"
+           WHEN NORMALIZED-INPUT = "6"
              OR NORMALIZED-INPUT = "VIEW MY NETWORK"
                PERFORM 580-VIEW-MY-NETWORK
 
-           WHEN NORMALIZED-INPUT = "6"
+           WHEN NORMALIZED-INPUT = "7"
+             OR NORMALIZED-INPUT = "JOB SEARCH/INTERNSHIP"
+             OR NORMALIZED-INPUT = "JOB"
+               PERFORM 930-JOB-SEARCH-MENU
+
+           WHEN NORMALIZED-INPUT = "8"
              OR NORMALIZED-INPUT = "MESSAGES"
                PERFORM 585-MESSAGES-MENU
 
+           WHEN NORMALIZED-INPUT = "9"
+             OR NORMALIZED-INPUT = "EXIT"
+               EXIT PARAGRAPH
+
            WHEN OTHER
-               CONTINUE
+               MOVE "Invalid option. Please try again." TO MESSAGE-BUFFER
+               PERFORM 700-DISPLAY-MESSAGE
         END-EVALUATE
     END-PERFORM.
 
@@ -2287,9 +2303,6 @@ END-IF.
         PERFORM 700-DISPLAY-MESSAGE
     END-IF.
 
-*> =====================
-*> NEW: View My Messages (Week 9)
-*> =====================
 587-VIEW-MY-MESSAGES.
     MOVE 0 TO LOOP-INDEX
     MOVE 0 TO MESSAGES-FOUND
