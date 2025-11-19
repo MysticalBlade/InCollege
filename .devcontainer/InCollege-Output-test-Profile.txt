@@ -1,0 +1,110 @@
+##Creating a profile for a user named Registration1
+Welcome to InCollege!
+Log In
+Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in.
+Welcome, Registration1!
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+5. View My Pending Connection Requests
+6. View My Network
+7. Job Search/Internship
+8. Messages
+9. Exit
+Enter your choice:
+--- Create/Edit Profile ---
+Enter First Name:
+Enter Last Name:
+Enter University/College Attended:
+Enter Major:
+Enter Graduation Year (YYYY):
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Experience # - Title:
+Experience # - Company/Organization:
+Experience # - Dates (e.g., Summer 2024):
+Experience # - Description: (optional, max 100 chars, blank to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Profile saved successfully!
+--- END_OF_PROGRAM_EXECUTION ---
+
+#Negative test - invalid graduation year
+Welcome to InCollege!
+Log In
+Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in.
+Welcome, UserA!
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+5. View My Pending Connection Requests
+6. View My Network
+7. Job Search/Internship
+8. Messages
+9. Exit
+Enter your choice:
+--- Create/Edit Profile ---
+Enter First Name:
+Enter Last Name:
+Enter University/College Attended:
+Enter Major:
+Enter Graduation Year (YYYY):
+Invalid graduation year length.
+Enter Graduation Year (YYYY):
+--- END_OF_PROGRAM_EXECUTION ---
+
+#Edge case: Enter exactly 3 expereiences and obmitting an optional description
+Welcome to InCollege!
+Log In
+Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in.
+Welcome, Registration1!
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+5. View My Pending Connection Requests
+6. View My Network
+7. Job Search/Internship
+8. Messages
+9. Exit
+Enter your choice:
+--- Create/Edit Profile ---
+Enter First Name:
+Enter Last Name:
+Enter University/College Attended:
+Enter Major:
+Enter Graduation Year (YYYY):
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Experience # - Title:
+Experience # - Company/Organization:
+Experience # - Dates (e.g., Summer 2024):
+Experience # - Description (optional, max 100 chars, blank to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Experience # - Title:
+Experience # - Company/Organization:
+Experience # - Dates (e.g., Summer 2024):
+Experience # - Description (optional, max 100 chars, blank to skip):
+Add Experience (optional, max 3 entries. Enter 'DONE' to finish):
+Experience # - Title:
+Experience # - Company/Organization:
+Experience # - Dates (e.g., Summer 2024):
+Experience # - Description (optional, max 100 chars, blank to skip):
+Add Education (optional, max 3 entries. Enter 'DONE' to finish):
+Education # - Degree:
+Profile saved successfully!
+--- END_OF_PROGRAM_EXECUTION ---

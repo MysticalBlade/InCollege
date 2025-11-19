@@ -1,0 +1,119 @@
+Welcome to InCollege!
+Log In
+Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in.
+Welcome, Registration1!
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+5. View My Pending Connection Requests
+6. View My Network
+7. Job Search/Internship
+8. Messages
+9. Exit
+Enter your choice:
+--- Your Profile ---
+Name: Registration1 1
+University: University of South Florida
+Major: Computer Science
+Graduation Year: 2026
+About Me: I am an aspriring software developer and tester right networking to connect with like-minded professionals.
+Experience:
+Title: Amazon
+Company: Summer 24
+Dates:
+Description: Lab Assistant
+Title: Summer 23
+Company: I did lab setups and assisted
+Dates: Teacher Assistant
+Description: USF
+Title: Assisted professors with gradi
+Company: DONE
+Dates: University of South Florida
+Description: DONE
+Education:
+Degree:
+University:
+Years:
+--------------------
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+5. View My Pending Connection Requests
+6. View My Network
+7. Job Search/Internship
+8. Messages
+9. Exit
+Enter your choice:
+Enter the full name of the person you are looking for:
+--- Found User Profile ---
+Name: Test User
+University: USF
+Major: Computer Science
+Graduation Year: 2025
+About Me: I am a test user.
+Experience:
+Experience: None
+Education:
+Education: None
+Send connection request to this user? (Y/N)
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+5. View My Pending Connection Requests
+6. View My Network
+7. Job Search/Internship
+8. Messages
+9. Exit
+Enter your choice:
+--- END_OF_PROGRAM_EXECUTION ---
+
+#Searching up non-existent user negative case
+Welcome to InCollege!
+Log In
+Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+You have successfully logged in.
+Welcome, Registration1!
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+5. View My Pending Connection Requests
+6. View My Network
+7. Job Search/Internship
+8. Messages
+9. Exit
+Enter your choice:
+Enter the full name of the person you are looking for:
+No one by that name could be found.
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+5. View My Pending Connection Requests
+6. View My Network
+7. Job Search/Internship
+8. Messages
+9. Exit
+Enter your choice:
+Invalid option. Please try again.
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for User
+4. Learn a New Skill
+5. View My Pending Connection Requests
+6. View My Network
+7. Job Search/Internship
+8. Messages
+9. Exit
+Enter your choice:
+--- END_OF_PROGRAM_EXECUTION ---

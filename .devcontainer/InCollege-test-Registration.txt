@@ -1,0 +1,8 @@
+#Edge case password exactly 8 characters
+2
+Registration1
+Passwo1!
+#Negative test case: password doesn't meet complexity requirements
+2
+Registration2
+Password

@@ -37,7 +37,7 @@ Location: Chicago, IL
 1. Apply for this Job
 2. Back to Job List
 Enter your choice:
-Your application for Marketing Specialist at BrandInc has been submitted.
+You have already applied to this job.
 --- Available Job Listings ---
 01. Software Intern at TechCorp (New York, NY)
 02. Data Analyst at DataSolutions (Remote)

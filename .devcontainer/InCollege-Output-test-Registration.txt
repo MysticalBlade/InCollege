@@ -1,0 +1,25 @@
+#edge case password exactly 8 characters
+Welcome to InCollege!
+Log In
+Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Account created successfully.
+Log In
+Create New Account
+Enter your choice:
+--- END_OF_PROGRAM_EXECUTION ---
+
+#negative test case: password doesn't meet complexity requirements
+Welcome to InCollege!
+Log In
+Create New Account
+Enter your choice:
+Please enter your username:
+Please enter your password:
+Invalid password. Password must be 8-12 characters and include at least one capital letter, one digit, and one special character.
+Log In
+Create New Account
+Enter your choice:
+--- END_OF_PROGRAM_EXECUTION ---

@@ -1,0 +1,14 @@
+#Viewing own's profile and searching for other users positive case
+1
+Registration1
+Passwo1!
+2
+3
+Test User
+
+#Searching up non-existent user negative case
+1
+Registration1
+Passwo1!
+3
+Test User1

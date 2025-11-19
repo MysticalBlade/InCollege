@@ -1,0 +1,56 @@
+#Creating a profile for a user named Registration1
+1
+Registration1
+Passwo1!
+1
+Registration1
+1
+University of South Florida
+Computer Science
+2026
+I am an aspriring software developer and tester right networking to connect with like-minded professionals.
+Software developer
+Amazon
+DONE
+University of South Florida
+Computer Science
+DONE
+
+#Negative test - invalid graduation year
+1
+UserA
+IAmUserA1!
+1
+UserA
+1
+University of South Florida
+Computer Science
+202
+
+#Edge case: Enter exactly 3 expereiences and obmitting an optional description
+1
+Registration1
+Passwo1!
+1
+Registration1
+1
+University of South Florida
+Computer Science
+2026
+I am an aspriring software developer and tester right networking to connect with like-minded professionals.
+Software developer
+Amazon
+Summer 24
+
+Lab Assistant
+USF
+Summer 23
+I did lab setups and assisted professors with grading.
+Teacher Assistant
+USF
+Summer 22
+Assisted professors with grading and held office hours for student questions.
+DONE
+University of South Florida
+DONE
+

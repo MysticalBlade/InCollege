@@ -1,6 +1,0 @@
-1
-AliceGomes
-Password1!
-6
-1
-UserB
